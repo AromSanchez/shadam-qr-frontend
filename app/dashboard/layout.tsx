@@ -3,6 +3,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "./components/AppSidebar";
+import { Toaster } from "sonner";
 
 export default function DashboardLayout({
   children,
@@ -29,6 +30,7 @@ export default function DashboardLayout({
             {/* Page */}
             <main className="flex-1 p-4">
               {children}
+              <Toaster richColors position="top-right" />
             </main>
 
           </div>
