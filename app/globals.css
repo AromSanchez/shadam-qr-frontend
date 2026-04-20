@@ -1,26 +1,81 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  
+  /* Paleta Base - Refinada */
+  --color-primary: #F26522;    /* Naranja Eléctrico */
+  --color-secondary: #0F172A;  /* Slate 900 */
+  --color-success: #059669;    /* Esmeralda */
+  --color-warning: #D97706;    /* Ámbar */
+  --color-danger: #E11D48;     /* Rosa-Rojo Pro */
+
+  /* Tipografía Híbrida */
+  --font-sans: var(--font-poppins);
+  --font-display: var(--font-outfit);
+}
+
+:root {
+  --background: #FFFFFF;
+  --foreground: #0F172A;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #020617;
+    --foreground: #F8FAFC;
   }
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display), sans-serif;
+}
+
+/* Glassmorphism Elite */
+@layer utilities {
+  .glass-premium {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 
+      0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+      0 2px 4px -2px rgba(0, 0, 0, 0.05),
+      inset 0 0 20px rgba(255, 255, 255, 0.5);
+  }
+
+  .dark .glass-premium {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 
+      0 10px 15px -3px rgba(0, 0, 0, 0.3), 
+      0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Sombras Volumétricas */
+  .shadow-elite {
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 0, 0, 0.05), 
+      0 8px 10px -6px rgba(0, 0, 0, 0.03);
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
