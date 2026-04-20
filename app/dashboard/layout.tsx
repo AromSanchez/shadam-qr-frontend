@@ -1,9 +1,15 @@
 "use client";
 
+import { Inter } from "next/font/google";
+
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "./components/AppSidebar";
 import { Toaster } from "sonner";
+
+const inter = Inter({
+  subsets: ["latin"],
+});
 
 export default function DashboardLayout({
   children,
@@ -13,7 +19,7 @@ export default function DashboardLayout({
   return (
     <TooltipProvider>
       <SidebarProvider>
-        <div className="flex min-h-screen w-full">
+        <div className={`${inter.className} flex min-h-screen w-full`}>
 
           {/* Sidebar */}
           <AppSidebar />
