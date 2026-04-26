@@ -459,23 +459,6 @@ export default function Consumos() {
                             </div>
                         )}
                     </div>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                            <p className="text-sm text-slate-600">Total de esta búsqueda</p>
-                            <p
-                                className="text-2xl md:text-3xl font-bold"
-                                style={{ color: "#aa4918" }}
-                            >
-                                S/ {stats.totalMonto.toFixed(2)}
-                            </p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-sm text-slate-600">Registros</p>
-                            <p className="text-2xl font-bold text-slate-900">
-                                {filtered.length}
-                            </p>
-                        </div>
-                    </div>
                 </CardContent>
             </Card>
         </div>

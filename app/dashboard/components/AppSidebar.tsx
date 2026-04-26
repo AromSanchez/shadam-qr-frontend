@@ -31,7 +31,6 @@ const items = [
     { title: "Menú del Día", icon: UtensilsCrossed, href: "/dashboard/menu" },
     { title: "Pensionistas", icon: Users, href: "/dashboard/pensionistas" },
     { title: "Consumos", icon: ClipboardList, href: "/dashboard/consumos" },
-    { title: "Ventas", icon: DollarSign, href: "/dashboard/ventas" },
     { title: "Mesas", icon: Grid3X3, href: "/dashboard/mesas" },
     { title: "Reportes", icon: BarChart3, href: "/dashboard/reportes" },
     { title: "Configuración", icon: Settings, href: "/dashboard/configuracion" },

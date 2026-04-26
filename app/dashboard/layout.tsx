@@ -1,7 +1,6 @@
 "use client";
 
 import { Inter } from "next/font/google";
-
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "./components/AppSidebar";
@@ -28,7 +27,7 @@ export default function DashboardLayout({
           <div className="flex flex-col flex-1">
 
             {/* Header */}
-            <header className="h-16 flex items-center justify-between border-b px-4">
+            <header className="sticky top-0 z-40 h-16 flex items-center justify-between border-b bg-background/95 px-4 backdrop-blur-sm">
               <SidebarTrigger />
               <span>Admin</span>
             </header>
