@@ -1,44 +1,132 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
+    Sidebar,
+    SidebarContent,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarMenu,
+    SidebarMenuItem,
+    SidebarMenuButton,
 } from "@/components/ui/sidebar";
 
+
+import {
+    LayoutDashboard,
+    UtensilsCrossed,
+    Users,
+    ClipboardList,
+    DollarSign,
+    Grid3X3,
+    BarChart3,
+    Settings,
+} from "lucide-react";
+
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+
+
+const items = [
+    { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    { title: "Menú del Día", icon: UtensilsCrossed, href: "/dashboard/menu" },
+    { title: "Pensionistas", icon: Users, href: "/dashboard/pensionistas" },
+    { title: "Consumos", icon: ClipboardList, href: "/dashboard/consumos" },
+    { title: "Ventas", icon: DollarSign, href: "/dashboard/ventas" },
+    { title: "Mesas", icon: Grid3X3, href: "/dashboard/mesas" },
+    { title: "Reportes", icon: BarChart3, href: "/dashboard/reportes" },
+    { title: "Configuración", icon: Settings, href: "/dashboard/configuracion" },
+];
+
+import Link from "next/link";
+
 export function AppSidebar() {
-  const pathname = usePathname();
 
-  const items = [
-    { title: "Dashboard", url: "/dashboard" },
-    { title: "Menú", url: "/dashboard/menu" },
-    { title: "Ventas", url: "/dashboard/ventas" },
-  ];
+    const pathname = usePathname();
 
-  return (
-    <Sidebar>
-      <SidebarContent>
-        <SidebarMenu>
-          {items.map((item) => {
-            const isActive = pathname === item.url;
+    const isActive = (href: string) => {
+        if (href === "/dashboard") {
+            return pathname === "/dashboard";
+        }
+        return pathname.startsWith(href); 
+    };
 
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild isActive={isActive}>
-                  <Link href={item.url}>
-                    {item.title}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
-      </SidebarContent>
-    </Sidebar>
-  );
+    return (
+        <Sidebar collapsible="icon" className="border-r-0 bg-[#B7410E]">
+
+            {/* HEADER */}
+            <div
+                className="
+          px-5 py-6 transition-all
+          group-data-[collapsible=icon]:opacity-0
+          group-data-[collapsible=icon]:invisible
+          group-data-[collapsible=icon]:pointer-events-none
+        "
+            >
+                <h1 className="text-xl font-bold text-white tracking-wide">
+                    Shadam
+                </h1>
+                <p className="text-xs text-white/70 mt-1">
+                    Gestión de restaurante
+                </p>
+            </div>
+
+            {/* DIVIDER */}
+            <div
+                className="
+          mx-4 h-px bg-white/15 transition-all
+          group-data-[collapsible=icon]:opacity-0
+          group-data-[collapsible=icon]:invisible
+        "
+            />
+
+            {/* CONTENT */}
+            <SidebarContent className="pt-5">
+                <SidebarGroup>
+                    <SidebarGroupContent>
+                        <SidebarMenu className="space-y-2">
+
+                            {items.map((item) => {
+                                const Icon = item.icon;
+                                const active = isActive(item.href);
+
+                                return (
+                                    <SidebarMenuItem key={item.title}>
+                                        <SidebarMenuButton
+                                            asChild
+                                            tooltip={item.title}
+                                            className={cn(
+                                                `
+          flex items-center gap-3 rounded-lg px-3 py-6
+          text-[0.95rem] cursor-pointer transition-all
+          group-data-[collapsible=icon]:justify-center
+          group-data-[collapsible=icon]:px-0
+          group-data-[collapsible=icon]:my-2
+          `,
+                                                active
+                                                    ? "bg-white/20 text-white font-medium"
+                                                    : "text-white/80 hover:text-white hover:bg-white/10"
+                                            )}
+                                        >
+                                            <Link href={item.href} className="flex items-center gap-3 w-full">
+                                                <Icon
+                                                    className="
+              h-4 w-4 shrink-0 transition-transform
+              group-data-[collapsible=icon]:scale-125
+            "
+                                                />
+
+                                                <span className="group-data-[collapsible=icon]:hidden">
+                                                    {item.title}
+                                                </span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                );
+                            })}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            </SidebarContent>
+        </Sidebar>
+    );
 }
