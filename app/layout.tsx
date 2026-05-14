@@ -31,6 +31,7 @@ export const viewport: Viewport = {
 };
 
 import { AuthProvider } from "@/lib/auth-context";
+import { CartProvider } from "@/lib/cart-context";
 
 export default function RootLayout({
   children,
@@ -45,9 +46,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <AuthProvider>
-          <main className="flex-1 overflow-y-auto pb-20">
-            {children}
-          </main>
+          <CartProvider>
+            <main className="flex-1 overflow-y-auto pb-20">
+              {children}
+            </main>
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useParams } from "next/navigation";
 import { Clock, CalendarDays, ChefHat, Sparkles, Moon, Sun, ShoppingBag, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BottomNav } from "@/components/ui/bottom-nav";
@@ -18,7 +19,10 @@ function getTodayLabel() {
   return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
-export default function MenuLandingPage() {
+export default function TableMenuPage() {
+  const params = useParams();
+  const tableId = params.tableId as string;
+  
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("todos");
@@ -26,7 +30,14 @@ export default function MenuLandingPage() {
   const [loading, setLoading] = useState(true);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const { addToCart, itemCount, total, setTableId, tableId } = useCart();
+  const { addToCart, itemCount, total, setTableId } = useCart();
+
+  // Initialize table context
+  useEffect(() => {
+    if (tableId) {
+      setTableId(tableId);
+    }
+  }, [tableId, setTableId]);
 
   // Initialize theme
   useEffect(() => {
@@ -79,20 +90,25 @@ export default function MenuLandingPage() {
 
       {/* ─── Premium Header ─────────────────────────────────── */}
       <div className="relative pt-12 px-6 pb-6 z-10">
-        <div className="flex justify-end items-center z-50 relative">
+        <div className="flex justify-between items-center z-50 relative">
+          <div className="flex items-center gap-3">
+             <HeaderProfile />
+             <div className="bg-[#aa4918] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">
+               Mesa {tableId.replace('table-', '')}
+             </div>
+          </div>
+          
           <button 
             onClick={toggleTheme}
             className="p-3 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm text-slate-700 dark:text-amber-400 hover:scale-105 transition-all"
-            title="Cambiar tema"
           >
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
         </div>
 
         <motion.div 
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
           className="mt-10 text-center"
         >
           <div className="inline-flex items-center gap-2 border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 rounded-full mb-6">
@@ -116,7 +132,7 @@ export default function MenuLandingPage() {
             </div>
             <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 bg-white dark:bg-white/5 px-3 sm:px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm transition-all duration-500">
               <ChefHat className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              <span className="text-[10px] sm:text-xs font-medium tracking-wider">Sabores Únicos</span>
+              <span className="text-[10px] sm:text-xs font-medium tracking-wider">Servicio en Mesa</span>
             </div>
           </div>
         </motion.div>
@@ -164,10 +180,10 @@ export default function MenuLandingPage() {
               {filteredProducts.map((product, index) => (
                 <motion.div
                   layout
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.2, delay: index * 0.02 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
                   key={product.id}
                   className="group relative p-6 rounded-[2rem] bg-white dark:bg-transparent dark:bg-gradient-to-b dark:from-white/[0.03] dark:to-transparent border border-slate-200 dark:border-white/[0.03] hover:border-amber-500/50 dark:hover:border-amber-500/20 shadow-sm dark:shadow-none transition-all duration-300"
                 >
@@ -238,6 +254,7 @@ export default function MenuLandingPage() {
       </AnimatePresence>
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <BottomNav />
     </div>
   );
 }

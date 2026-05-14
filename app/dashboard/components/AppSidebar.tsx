@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 
 const items = [
     { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    { title: "Productos", icon: ClipboardList, href: "/dashboard/productos" },
     { title: "Menú del Día", icon: UtensilsCrossed, href: "/dashboard/menu" },
     { title: "Pensionistas", icon: Users, href: "/dashboard/pensionistas" },
     { title: "Consumos", icon: ClipboardList, href: "/dashboard/consumos" },

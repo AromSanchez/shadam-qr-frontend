@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   DollarSign,
   ClipboardList,
@@ -59,6 +60,29 @@ const paymentData = [
 // 🚀 COMPONENTE
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState({
+    todaySales: 0,
+    todayConsumptionsCount: 0,
+    totalPensionists: 0,
+    activePensionists: 0,
+    debtPensionists: 0,
+    totalDebt: 0
+  });
+
+  useEffect(() => {
+    fetch("/api/dashboard/stats")
+      .then(res => res.json())
+      .then(data => setStats({
+        todaySales: data?.todaySales || 0,
+        todayConsumptionsCount: data?.todayConsumptionsCount || 0,
+        totalPensionists: data?.totalPensionists || 0,
+        activePensionists: data?.activePensionists || 0,
+        debtPensionists: data?.debtPensionists || 0,
+        totalDebt: data?.totalDebt || 0
+      }))
+      .catch(err => console.error(err));
+  }, []);
+
   return (
     <div className="space-y-6">
 
@@ -74,28 +98,28 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Ventas de Hoy"
-          value="S/ 2,450"
+          value={`S/ ${stats.todaySales.toFixed(2)}`}
           icon={DollarSign}
-          trend={{ value: "12% vs ayer", positive: true }}
+          trend={{ value: "En tiempo real", positive: true }}
         />
         <StatCard
           title="Consumos"
-          value="86"
+          value={stats.todayConsumptionsCount.toString()}
           icon={ClipboardList}
-          trend={{ value: "8% vs ayer", positive: true }}
+          trend={{ value: "Pensionistas", positive: true }}
         />
         <StatCard
           title="Pensionistas"
-          value="24"
-          subtitle="de 32 registrados"
+          value={stats.activePensionists.toString()}
+          subtitle={`de ${stats.totalPensionists} registrados`}
           icon={Users}
         />
         <StatCard
           title="Con Deuda"
-          value="5"
-          subtitle="S/ -340 total"
+          value={stats.debtPensionists.toString()}
+          subtitle={`S/ -${stats.totalDebt} total`}
           icon={AlertTriangle}
-          variant="destructive"
+          variant={stats.debtPensionists > 0 ? "destructive" : "default"}
         />
       </div>
 

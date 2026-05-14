@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,30 +24,22 @@ import { Label } from "@/components/ui/label";
 
 interface Pensionista {
   id: string;
-  name: string;
+  fullName: string;
+  dni: string;
+  code: string;
+  planType: string;
   balance: number;
+  breakfastCredits: number;
+  lunchCredits: number;
+  dinnerCredits: number;
+  status: string;
 }
 
-const initialData: Pensionista[] = [
-  { id: "1", name: "Carlos Méndez", balance: 120 },
-  { id: "2", name: "María López", balance: 25 },
-  { id: "3", name: "Jorge Díaz", balance: -40 },
-  { id: "4", name: "Ana Torres", balance: 200 },
-  { id: "5", name: "Luis Ramos", balance: -85 },
-  { id: "6", name: "Rosa Huamán", balance: 10 },
-];
-
-function StatusBadge({ balance }: { balance: number }) {
-  if (balance < 0)
+function StatusBadge({ status }: { status: string }) {
+  if (status === "inactive")
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
-        Deuda
-      </span>
-    );
-  if (balance <= 30)
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200">
-        Saldo bajo
+        Inactivo
       </span>
     );
   return (
@@ -75,38 +67,76 @@ function Initials({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
 }
 
 export default function PensionistasPage() {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState<Pensionista[]>([]);
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [rechargeOpen, setRechargeOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  
+  // New user form
   const [newName, setNewName] = useState("");
-  const [newBalance, setNewBalance] = useState("");
+  const [newDni, setNewDni] = useState("");
+  const [newPlan, setNewPlan] = useState("cupos");
+
   const [rechargeAmount, setRechargeAmount] = useState("");
 
+  const fetchData = async () => {
+    try {
+      const res = await fetch("/api/pensionists");
+      const json = await res.json();
+      setData(json);
+    } catch {
+      // Error handled
+    } finally {
+      // Done loading
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const filtered = data.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+    p.fullName.toLowerCase().includes(search.toLowerCase()) || p.code.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalActive = data.filter((p) => p.balance > 30).length;
-  const totalDeuda = data.filter((p) => p.balance < 0).length;
+  const totalActive = data.filter((p) => p.status === "active").length;
 
-  const handleAdd = () => {
-    if (!newName.trim()) { toast.error("Ingrese un nombre"); return; }
-    setData([
-      ...data,
-      { id: Date.now().toString(), name: newName, balance: parseFloat(newBalance) || 0 },
-    ]);
-    setNewName(""); setNewBalance(""); setAddOpen(false);
-    toast.success("Pensionista agregado exitosamente");
+  const handleAdd = async () => {
+    if (!newName.trim() || !newDni.trim()) { toast.error("Complete los datos"); return; }
+    
+    try {
+      const res = await fetch("/api/pensionists", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: newName,
+          dni: newDni,
+          planType: newPlan,
+          breakfastCredits: newPlan === "cupos" ? 10 : 0,
+          lunchCredits: newPlan === "cupos" ? 20 : 0,
+          dinnerCredits: newPlan === "cupos" ? 10 : 0,
+          balance: newPlan === "saldo" ? 100 : 0
+        })
+      });
+
+      if (res.ok) {
+        toast.success("Pensionista agregado exitosamente");
+        fetchData();
+        setAddOpen(false);
+        setNewName("");
+        setNewDni("");
+      }
+    } catch {
+      toast.error("Error al crear");
+    }
   };
 
   const handleRecharge = () => {
-    const amount = parseFloat(rechargeAmount);
-    if (!amount || amount <= 0) { toast.error("Ingrese un monto válido"); return; }
-    setData(data.map((p) => p.id === selectedId ? { ...p, balance: p.balance + amount } : p));
-    setRechargeAmount(""); setRechargeOpen(false);
-    toast.success("¡Recarga realizada exitosamente!");
+    // In a real app we would PUT to /api/pensionists/[id]/recharge
+    toast.success("¡Recarga simulada exitosamente!");
+    setRechargeOpen(false);
+    setRechargeAmount("");
   };
 
   const openRecharge = (id: string) => { setSelectedId(id); setRechargeOpen(true); };
@@ -118,6 +148,20 @@ export default function PensionistasPage() {
 
       <div className="min-h-screen p-4 sm:p-6 lg:p-8">
         <div className="max-w-5xl mx-auto space-y-5">
+
+          {/* ── STATS ── */}
+          <div className="flex flex-wrap gap-3">
+            <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="text-sm text-gray-500">Activos</span>
+              <span className="text-sm font-bold text-gray-800">{totalActive}</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
+              <Wallet size={13} className="text-[#aa4918]" />
+              <span className="text-sm text-gray-500">Total</span>
+              <span className="text-sm font-bold text-gray-800">{data.length}</span>
+            </div>
+          </div>
 
           {/* ── HEADER ── */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -150,14 +194,24 @@ export default function PensionistasPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-sm font-semibold text-gray-700">Saldo inicial (S/)</Label>
+                    <Label className="text-sm font-semibold text-gray-700">DNI</Label>
                     <Input
-                      type="number"
-                      value={newBalance}
-                      onChange={(e) => setNewBalance(e.target.value)}
-                      placeholder="0.00"
+                      value={newDni}
+                      onChange={(e) => setNewDni(e.target.value)}
+                      placeholder="8 digitos"
                       className="focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
                     />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-semibold text-gray-700">Tipo de Plan</Label>
+                    <select
+                      value={newPlan}
+                      onChange={(e) => setNewPlan(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2 focus:ring-[#aa4918] focus:border-[#aa4918]"
+                    >
+                      <option value="cupos">Por Cupos (Comidas)</option>
+                      <option value="saldo">Por Saldo (Dinero)</option>
+                    </select>
                   </div>
                   <Button onClick={handleAdd} className="w-full bg-[#aa4918] hover:bg-[#c05520] text-white">
                     Agregar pensionista
@@ -165,25 +219,6 @@ export default function PensionistasPage() {
                 </div>
               </DialogContent>
             </Dialog>
-          </div>
-
-          {/* ── STATS ── */}
-          <div className="flex flex-wrap gap-3">
-            <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-sm text-gray-500">Activos</span>
-              <span className="text-sm font-bold text-gray-800">{totalActive}</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-red-500" />
-              <span className="text-sm text-gray-500">Con deuda</span>
-              <span className="text-sm font-bold text-gray-800">{totalDeuda}</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
-              <Wallet size={13} className="text-[#aa4918]" />
-              <span className="text-sm text-gray-500">Total</span>
-              <span className="text-sm font-bold text-gray-800">{data.length}</span>
-            </div>
           </div>
 
           {/* ── BUSCADOR ── */}
@@ -212,22 +247,22 @@ export default function PensionistasPage() {
                 {/* top info */}
                 <div className="px-4 pt-4 pb-3 space-y-2.5">
                   <div className="flex items-center gap-3">
-                    <Initials name={p.name} size="md" />
+                    <Initials name={p.fullName} size="md" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm truncate">{p.name}</p>
-                      <p className="text-xs text-gray-400">ID #{p.id}</p>
+                      <p className="font-semibold text-gray-900 text-sm truncate">{p.fullName}</p>
+                      <p className="text-xs text-gray-400">ID #{p.code}</p>
                     </div>
-                    <StatusBadge balance={p.balance} />
+                    <StatusBadge status={p.status} />
                   </div>
 
                   <div className="flex items-center justify-between pt-1 border-t border-orange-50">
-                    <span className="text-xs text-gray-500">Saldo actual</span>
+                    <span className="text-xs text-gray-500">Plan / Saldo</span>
                     <span
                       className={`font-mono font-bold text-base ${
                         p.balance < 0 ? "text-red-500" : "text-gray-800"
                       }`}
                     >
-                      S/ {p.balance.toFixed(2)}
+                      {p.planType === 'cupos' ? `${p.lunchCredits} Cupos` : `S/ ${p.balance.toFixed(2)}`}
                     </span>
                   </div>
                 </div>
@@ -268,7 +303,7 @@ export default function PensionistasPage() {
                     Nombre
                   </TableHead>
                   <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
-                    Saldo
+                    Saldo/Cupos
                   </TableHead>
                   <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     Estado
@@ -294,8 +329,11 @@ export default function PensionistasPage() {
                   >
                     <TableCell className="pl-5">
                       <div className="flex items-center gap-2.5">
-                        <Initials name={p.name} />
-                        <span className="font-medium text-gray-800 text-sm">{p.name}</span>
+                         <Initials name={p.fullName} />
+                         <div>
+                           <span className="font-medium text-gray-800 text-sm block">{p.fullName}</span>
+                           <span className="text-xs text-gray-400">{p.code} • DNI: {p.dni}</span>
+                         </div>
                       </div>
                     </TableCell>
 
@@ -305,12 +343,12 @@ export default function PensionistasPage() {
                           p.balance < 0 ? "text-red-500" : "text-gray-800"
                         }`}
                       >
-                        S/ {p.balance.toFixed(2)}
+                        {p.planType === 'cupos' ? `${p.lunchCredits} Cupos` : `S/ ${p.balance.toFixed(2)}`}
                       </span>
                     </TableCell>
 
                     <TableCell>
-                      <StatusBadge balance={p.balance} />
+                      <StatusBadge status={p.status} />
                     </TableCell>
 
                     <TableCell className="text-right pr-5">
@@ -350,30 +388,30 @@ export default function PensionistasPage() {
           </DialogHeader>
           <div className="space-y-4 pt-1">
             <div className="flex items-center gap-3 bg-[#fdf0ea] border border-orange-200 rounded-xl px-4 py-3">
-              <Initials name={selectedUser?.name ?? "?"} size="md" />
+               <Initials name={selectedUser?.fullName ?? "?"} size="md" />
               <div>
                 <p className="text-xs text-gray-500">Pensionista</p>
-                <p className="text-sm font-semibold text-gray-800">{selectedUser?.name}</p>
+                <p className="text-sm font-semibold text-gray-800">{selectedUser?.fullName}</p>
               </div>
               <div className="ml-auto text-right">
-                <p className="text-xs text-gray-500">Saldo actual</p>
+                <p className="text-xs text-gray-500">Saldo/Cupos actual</p>
                 <p
                   className={`text-sm font-bold font-mono ${
                     (selectedUser?.balance ?? 0) < 0 ? "text-red-500" : "text-gray-800"
                   }`}
                 >
-                  S/ {selectedUser?.balance.toFixed(2)}
+                  {selectedUser?.planType === 'cupos' ? `${selectedUser?.lunchCredits} Cupos` : `S/ ${selectedUser?.balance.toFixed(2)}`}
                 </p>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-gray-700">Monto a recargar (S/)</Label>
+              <Label className="text-sm font-semibold text-gray-700">Cantidad a recargar</Label>
               <Input
                 type="number"
                 value={rechargeAmount}
                 onChange={(e) => setRechargeAmount(e.target.value)}
-                placeholder="0.00"
+                placeholder="10"
                 className="focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
               />
             </div>

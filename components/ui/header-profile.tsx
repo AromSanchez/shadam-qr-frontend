@@ -20,10 +20,10 @@ export function HeaderProfile() {
           animate={{ opacity: 1, x: 0 }}
           className="flex flex-col"
         >
-          <span className="text-white/40 text-[9px] font-black uppercase tracking-[0.3em] font-display">
+          <span className="text-slate-500 dark:text-white/40 text-[9px] font-black uppercase tracking-[0.3em] font-display">
             Premium Experience
           </span>
-          <h2 className="text-white font-bold text-sm tracking-tight font-display">
+          <h2 className="text-slate-900 dark:text-white font-bold text-sm tracking-tight font-display">
             Restaurante Shadam
           </h2>
         </motion.div>
@@ -32,18 +32,18 @@ export function HeaderProfile() {
           <motion.div 
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className="relative w-9 h-9 flex items-center justify-center bg-white/10 backdrop-blur-xl rounded-full text-white/90 shrink-0 cursor-pointer hover:bg-white/20 transition-all border border-white/10 shadow-lg"
+            className="relative w-9 h-9 flex items-center justify-center bg-white dark:bg-white/10 backdrop-blur-xl rounded-full text-slate-700 dark:text-white/90 shrink-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/20 transition-all border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-lg"
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-[2px] right-[2px] w-2.5 h-2.5 bg-primary rounded-full border-2 border-slate-900" />
+            <span className="absolute top-[2px] right-[2px] w-2.5 h-2.5 bg-primary rounded-full border-2 border-slate-50 dark:border-slate-900" />
           </motion.div>
 
           {!user ? (
             <motion.button
-              whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.2)" }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowLogin(true)}
-              className="bg-white/10 backdrop-blur-xl border border-white/20 text-white text-xs font-bold px-5 py-2.5 rounded-full flex items-center gap-2 shadow-xl"
+              className="bg-white dark:bg-white/10 backdrop-blur-xl border border-slate-200 dark:border-white/20 text-slate-700 dark:text-white text-xs font-bold px-5 py-2.5 rounded-full flex items-center gap-2 shadow-sm dark:shadow-xl hover:bg-slate-50 dark:hover:bg-white/20 transition-all"
             >
               <UserIcon className="w-3.5 h-3.5" />
               <span>Ingresar</span>
@@ -53,16 +53,16 @@ export function HeaderProfile() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/20 hover:bg-white/20 transition-all p-1 pr-3 rounded-full shadow-2xl"
+                className="flex items-center gap-2 bg-white dark:bg-white/10 backdrop-blur-xl border border-slate-200 dark:border-white/20 hover:bg-slate-50 dark:hover:bg-white/20 transition-all p-1 pr-3 rounded-full shadow-sm dark:shadow-2xl"
               >
-                <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-white/30 shrink-0 shadow-inner">
+                <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-slate-200 dark:border-white/30 shrink-0 shadow-inner">
                   <Image src={user.avatar} alt={user.name} fill sizes="32px" className="object-cover" />
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-white text-xs font-bold whitespace-nowrap max-w-[90px] truncate font-display">
+                  <span className="text-slate-800 dark:text-white text-xs font-bold whitespace-nowrap max-w-[90px] truncate font-display">
                     {user.name.split(' ')[0]}
                   </span>
-                  <ChevronDown className={`w-3 h-3 text-white/60 transition-transform duration-300 ${showDropdown ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3 h-3 text-slate-500 dark:text-white/60 transition-transform duration-300 ${showDropdown ? 'rotate-180' : ''}`} />
                 </div>
               </motion.button>
 
