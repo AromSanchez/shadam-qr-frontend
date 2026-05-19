@@ -163,7 +163,7 @@ export default function ProductosPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5 mb-0.5">
-              <Package className="text-[#aa4918]" size={22} />
+              <Package className="text-[#06b6d4]" size={22} />
               <h1 className="text-2xl font-bold text-gray-900">Gestión de Productos</h1>
             </div>
             <p className="text-sm text-gray-500 pl-8">Administra el catálogo de platos y bebidas</p>
@@ -171,13 +171,13 @@ export default function ProductosPage() {
 
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2 bg-[#aa4918] hover:bg-[#c05520] text-white">
+              <Button className="gap-2 bg-[#06b6d4] hover:bg-[#c05520] text-white">
                 <Plus size={16} /> Nuevo Producto
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle className="text-[#aa4918]">Agregar Producto</DialogTitle>
+                <DialogTitle className="text-[#06b6d4]">Agregar Producto</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleAddProduct} className="space-y-4 pt-2">
                 <div className="space-y-1.5">
@@ -229,7 +229,7 @@ export default function ProductosPage() {
                     placeholder="https://..."
                   />
                 </div>
-                <Button type="submit" className="w-full bg-[#aa4918] hover:bg-[#c05520] text-white mt-2">
+                <Button type="submit" className="w-full bg-[#06b6d4] hover:bg-[#c05520] text-white mt-2">
                   Guardar Producto
                 </Button>
               </form>

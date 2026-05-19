@@ -59,7 +59,7 @@ function Initials({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
       : "w-8 h-8 text-xs";
   return (
     <span
-      className={`${cls} rounded-full bg-[#fdf0ea] text-[#aa4918] font-bold flex items-center justify-center flex-shrink-0 uppercase`}
+      className={`${cls} rounded-full bg-[#fdf0ea] text-[#06b6d4] font-bold flex items-center justify-center flex-shrink-0 uppercase`}
     >
       {initials}
     </span>
@@ -157,7 +157,7 @@ export default function PensionistasPage() {
               <span className="text-sm font-bold text-gray-800">{totalActive}</span>
             </div>
             <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
-              <Wallet size={13} className="text-[#aa4918]" />
+              <Wallet size={13} className="text-[#06b6d4]" />
               <span className="text-sm text-gray-500">Total</span>
               <span className="text-sm font-bold text-gray-800">{data.length}</span>
             </div>
@@ -167,7 +167,7 @@ export default function PensionistasPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2.5 mb-0.5">
-                <Users className="text-[#aa4918]" size={22} />
+                <Users className="text-[#06b6d4]" size={22} />
                 <h1 className="text-2xl font-bold text-gray-900">Pensionistas</h1>
               </div>
               <p className="text-sm text-gray-500 pl-8">Gestión de usuarios con saldo prepagado</p>
@@ -175,13 +175,13 @@ export default function PensionistasPage() {
 
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2 bg-[#aa4918] hover:bg-[#c05520] text-white w-full sm:w-auto">
+                <Button className="gap-2 bg-[#06b6d4] hover:bg-[#c05520] text-white w-full sm:w-auto">
                   <Plus size={15} /> Nuevo pensionista
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-sm">
                 <DialogHeader>
-                  <DialogTitle className="text-[#aa4918]">Agregar Pensionista</DialogTitle>
+                  <DialogTitle className="text-[#06b6d4]">Agregar Pensionista</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-1">
                   <div className="space-y-1.5">
@@ -190,7 +190,7 @@ export default function PensionistasPage() {
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                       placeholder="Ej. Carlos Méndez"
-                      className="focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
+                      className="focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -199,7 +199,7 @@ export default function PensionistasPage() {
                       value={newDni}
                       onChange={(e) => setNewDni(e.target.value)}
                       placeholder="8 digitos"
-                      className="focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
+                      className="focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -207,13 +207,13 @@ export default function PensionistasPage() {
                     <select
                       value={newPlan}
                       onChange={(e) => setNewPlan(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2 focus:ring-[#aa4918] focus:border-[#aa4918]"
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2 focus:ring-[#06b6d4] focus:border-[#06b6d4]"
                     >
                       <option value="cupos">Por Cupos (Comidas)</option>
                       <option value="saldo">Por Saldo (Dinero)</option>
                     </select>
                   </div>
-                  <Button onClick={handleAdd} className="w-full bg-[#aa4918] hover:bg-[#c05520] text-white">
+                  <Button onClick={handleAdd} className="w-full bg-[#06b6d4] hover:bg-[#c05520] text-white">
                     Agregar pensionista
                   </Button>
                 </div>
@@ -228,7 +228,7 @@ export default function PensionistasPage() {
               placeholder="Buscar pensionista…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
+              className="pl-9 focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
             />
           </div>
 
@@ -271,7 +271,7 @@ export default function PensionistasPage() {
                 <div className="flex border-t border-orange-100">
                   <button
                     onClick={() => openRecharge(p.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-[#aa4918] hover:bg-[#fdf0ea] transition-colors border-r border-orange-100"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-[#06b6d4] hover:bg-[#fdf0ea] transition-colors border-r border-orange-100"
                   >
                     <RefreshCw size={13} /> Recargar
                   </button>
@@ -291,7 +291,7 @@ export default function PensionistasPage() {
           ══════════════════════════════════════ */}
           <div className="hidden md:block bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
             <div className="px-5 py-3.5 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
-              <span className="text-xs font-bold uppercase tracking-widest text-[#aa4918]">
+              <span className="text-xs font-bold uppercase tracking-widest text-[#06b6d4]">
                 Listado de pensionistas
               </span>
             </div>
@@ -356,7 +356,7 @@ export default function PensionistasPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1.5 h-8 text-xs border-[#aa4918] text-[#aa4918] hover:bg-[#fdf0ea] hover:text-[#aa4918]"
+                          className="gap-1.5 h-8 text-xs border-[#06b6d4] text-[#06b6d4] hover:bg-[#fdf0ea] hover:text-[#06b6d4]"
                           onClick={() => openRecharge(p.id)}
                         >
                           <RefreshCw size={12} /> Recargar
@@ -384,7 +384,7 @@ export default function PensionistasPage() {
       <Dialog open={rechargeOpen} onOpenChange={setRechargeOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-[#aa4918]">Recargar Saldo</DialogTitle>
+            <DialogTitle className="text-[#06b6d4]">Recargar Saldo</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-1">
             <div className="flex items-center gap-3 bg-[#fdf0ea] border border-orange-200 rounded-xl px-4 py-3">
@@ -412,13 +412,13 @@ export default function PensionistasPage() {
                 value={rechargeAmount}
                 onChange={(e) => setRechargeAmount(e.target.value)}
                 placeholder="10"
-                className="focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
+                className="focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
               />
             </div>
 
             <Button
               onClick={handleRecharge}
-              className="w-full bg-[#aa4918] hover:bg-[#c05520] text-white gap-2"
+              className="w-full bg-[#06b6d4] hover:bg-[#c05520] text-white gap-2"
             >
               <RefreshCw size={14} /> Confirmar recarga
             </Button>

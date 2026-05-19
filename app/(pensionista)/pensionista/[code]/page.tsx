@@ -66,7 +66,7 @@ export default function PensionistProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#aa4918] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-[#06b6d4] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -81,7 +81,7 @@ export default function PensionistProfilePage() {
         <p className="text-slate-500 max-w-xs">{error || "El código de pensionista no existe o ha sido desactivado."}</p>
         <button 
           onClick={() => window.location.href = "/"}
-          className="mt-6 px-6 py-3 bg-[#aa4918] text-white rounded-2xl font-bold shadow-lg"
+          className="mt-6 px-6 py-3 bg-[#06b6d4] text-white rounded-2xl font-bold shadow-lg"
         >
           Volver al Menú
         </button>
@@ -114,8 +114,8 @@ export default function PensionistProfilePage() {
           
           <div className="flex flex-col items-center text-center space-y-6">
             <div className="w-48 h-48 bg-slate-50 border-4 border-slate-100 rounded-3xl flex items-center justify-center p-4 relative">
-               <QrCode size={120} className="text-[#aa4918]" />
-               <div className="absolute -bottom-3 bg-[#aa4918] text-white px-4 py-1 rounded-full text-[10px] font-mono font-bold tracking-widest">
+               <QrCode size={120} className="text-[#06b6d4]" />
+               <div className="absolute -bottom-3 bg-[#06b6d4] text-white px-4 py-1 rounded-full text-[10px] font-mono font-bold tracking-widest">
                  {data.code}
                </div>
             </div>

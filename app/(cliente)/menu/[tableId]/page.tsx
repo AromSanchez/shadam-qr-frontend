@@ -6,8 +6,6 @@ import { Clock, CalendarDays, ChefHat, Sparkles, Moon, Sun, ShoppingBag, Plus } 
 import { motion, AnimatePresence } from "framer-motion";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { HeaderProfile } from "@/components/ui/header-profile";
-import { CartDrawer } from "@/components/ui/cart-drawer";
-import { useCart } from "@/lib/cart-context";
 import { Product, Category } from "@/lib/mock-db";
 
 // ─── Helpers ───────────────────────────────────────────
@@ -28,16 +26,6 @@ export default function TableMenuPage() {
   const [activeCategory, setActiveCategory] = useState<string>("todos");
   const [isDark, setIsDark] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-
-  const { addToCart, itemCount, total, setTableId } = useCart();
-
-  // Initialize table context
-  useEffect(() => {
-    if (tableId) {
-      setTableId(tableId);
-    }
-  }, [tableId, setTableId]);
 
   // Initialize theme
   useEffect(() => {
@@ -93,7 +81,7 @@ export default function TableMenuPage() {
         <div className="flex justify-between items-center z-50 relative">
           <div className="flex items-center gap-3">
              <HeaderProfile />
-             <div className="bg-[#aa4918] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">
+             <div className="bg-[#06b6d4] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">
                Mesa {tableId.replace('table-', '')}
              </div>
           </div>
@@ -111,9 +99,9 @@ export default function TableMenuPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mt-10 text-center"
         >
-          <div className="inline-flex items-center gap-2 border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 rounded-full mb-6">
-            <Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-            <span className="text-amber-700 dark:text-amber-400/90 text-xs font-bold tracking-[0.2em] uppercase">
+          <div className="inline-flex items-center gap-2 border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 rounded-full mb-6">
+            <Sparkles className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />
+            <span className="text-cyan-700 dark:text-cyan-400/90 text-xs font-bold tracking-[0.2em] uppercase">
               Restaurante Shadam
             </span>
           </div>
@@ -145,7 +133,7 @@ export default function TableMenuPage() {
             onClick={() => setActiveCategory("todos")}
             className={`whitespace-nowrap px-5 py-2.5 rounded-2xl text-xs font-bold tracking-widest transition-all flex items-center gap-2 ${
               activeCategory === "todos"
-                ? "bg-amber-500 text-white dark:text-[#060913] shadow-[0_4px_14px_rgba(245,158,11,0.3)]"
+                ? "bg-cyan-500 text-white dark:text-[#060913] shadow-[0_4px_14px_rgba(6,182,212,0.3)]"
                 : "bg-white dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent"
             }`}
           >
@@ -158,7 +146,7 @@ export default function TableMenuPage() {
               onClick={() => setActiveCategory(cat.id)}
               className={`whitespace-nowrap px-5 py-2.5 rounded-2xl text-xs font-bold tracking-widest transition-all flex items-center gap-2 ${
                 activeCategory === cat.id
-                  ? "bg-amber-500 text-white dark:text-[#060913] shadow-[0_4px_14px_rgba(245,158,11,0.3)]"
+                  ? "bg-cyan-500 text-white dark:text-[#060913] shadow-[0_4px_14px_rgba(6,182,212,0.3)]"
                   : "bg-white dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent"
               }`}
             >
@@ -185,13 +173,19 @@ export default function TableMenuPage() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
                   key={product.id}
-                  className="group relative p-6 rounded-[2rem] bg-white dark:bg-transparent dark:bg-gradient-to-b dark:from-white/[0.03] dark:to-transparent border border-slate-200 dark:border-white/[0.03] hover:border-amber-500/50 dark:hover:border-amber-500/20 shadow-sm dark:shadow-none transition-all duration-300"
+                  className="group relative p-6 rounded-[2rem] bg-white dark:bg-transparent dark:bg-gradient-to-b dark:from-white/[0.03] dark:to-transparent border border-slate-200 dark:border-white/[0.03] hover:border-cyan-500/50 dark:hover:border-cyan-500/20 shadow-sm dark:shadow-none transition-all duration-300"
                 >
+                  {product.image && (
+                    <div className="w-full h-48 mb-5 rounded-2xl overflow-hidden relative shadow-sm border border-slate-100 dark:border-white/5">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    </div>
+                  )}
                   <div className="flex justify-between items-baseline mb-3 gap-4">
                      <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white font-display tracking-wide transition-colors duration-500">
                        {product.name}
                      </h3>
-                     <span className="text-amber-600 dark:text-amber-400 font-bold text-lg whitespace-nowrap">
+                     <span className="text-cyan-600 dark:text-cyan-400 font-bold text-lg whitespace-nowrap">
                        S/ {product.price.toFixed(2)}
                      </span>
                   </div>
@@ -209,14 +203,6 @@ export default function TableMenuPage() {
                          </span>
                        </div>
                      </div>
-                     
-                     <button
-                       onClick={() => addToCart(product)}
-                       className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white dark:text-[#060913] px-3 py-1.5 rounded-xl text-xs font-bold transition-colors shadow-md"
-                     >
-                       <Plus className="w-3.5 h-3.5" />
-                       Añadir
-                     </button>
                   </div>
                 </motion.div>
               ))}
@@ -225,35 +211,6 @@ export default function TableMenuPage() {
         )}
       </main>
 
-      {/* Floating Cart Summary */}
-      <AnimatePresence>
-        {itemCount > 0 && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-24 left-0 right-0 z-40 px-6 flex justify-center pointer-events-none"
-          >
-            <button 
-              onClick={() => setIsCartOpen(true)}
-              className="pointer-events-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 w-full max-w-sm rounded-full p-1.5 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:scale-[1.02] transition-transform"
-            >
-              <div className="bg-amber-500 text-white dark:text-[#060913] w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm">
-                {itemCount}
-              </div>
-              <div className="flex items-center gap-2 font-medium tracking-wide">
-                <ShoppingBag className="w-4 h-4" />
-                <span>Mi Pedido</span>
-              </div>
-              <div className="pr-4 font-bold">
-                S/ {total.toFixed(2)}
-              </div>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <BottomNav />
     </div>
   );

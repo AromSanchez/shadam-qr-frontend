@@ -120,7 +120,7 @@ export default function Mesas() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2.5 mb-0.5">
-                <LayoutGrid className="text-[#aa4918]" size={22} />
+                <LayoutGrid className="text-[#06b6d4]" size={22} />
                 <h1 className="text-2xl font-bold text-gray-900">Mesas</h1>
               </div>
               <p className="text-sm text-gray-500 pl-8">Organiza el layout del restaurante</p>
@@ -128,13 +128,13 @@ export default function Mesas() {
 
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2 bg-[#aa4918] hover:bg-[#c05520] text-white w-full sm:w-auto">
+                <Button className="gap-2 bg-[#06b6d4] hover:bg-[#c05520] text-white w-full sm:w-auto">
                   <Plus size={15} /> Nueva Mesa
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-sm">
                 <DialogHeader>
-                  <DialogTitle className="text-[#aa4918]">Agregar Mesa</DialogTitle>
+                  <DialogTitle className="text-[#06b6d4]">Agregar Mesa</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-1">
                   <div className="space-y-1.5">
@@ -144,10 +144,10 @@ export default function Mesas() {
                       value={newNumber}
                       onChange={(e) => setNewNumber(e.target.value)}
                       placeholder="Ej: 7"
-                      className="focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
+                      className="focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
                     />
                   </div>
-                  <Button onClick={handleAdd} className="w-full bg-[#aa4918] hover:bg-[#c05520] text-white">
+                  <Button onClick={handleAdd} className="w-full bg-[#06b6d4] hover:bg-[#c05520] text-white">
                     Agregar mesa
                   </Button>
                 </div>
@@ -158,7 +158,7 @@ export default function Mesas() {
           {/* STATS */}
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-[#aa4918]" />
+              <span className="w-2 h-2 rounded-full bg-[#06b6d4]" />
               <span className="text-sm text-gray-500">Ocupadas</span>
               <span className="text-sm font-bold text-gray-800">{occupied}</span>
             </div>
@@ -168,7 +168,7 @@ export default function Mesas() {
               <span className="text-sm font-bold text-gray-800">{free}</span>
             </div>
             <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
-              <LayoutGrid size={13} className="text-[#aa4918]" />
+              <LayoutGrid size={13} className="text-[#06b6d4]" />
               <span className="text-sm text-gray-500">Total celdas</span>
               <span className="text-sm font-bold text-gray-800">{total}</span>
             </div>
@@ -178,8 +178,8 @@ export default function Mesas() {
           <div className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
             {/* card header */}
             <div className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
-              <Move size={14} className="text-[#aa4918]" />
-              <span className="text-xs font-bold uppercase tracking-widest text-[#aa4918]">
+              <Move size={14} className="text-[#06b6d4]" />
+              <span className="text-xs font-bold uppercase tracking-widest text-[#06b6d4]">
                 Arrastra las mesas para reorganizarlas
               </span>
             </div>
@@ -205,10 +205,10 @@ export default function Mesas() {
                       key={cellKey}
                       className={`aspect-square rounded-2xl border-2 border-dashed flex items-center justify-center transition-all
                         ${table
-                          ? "border-[#aa4918]/30 bg-[#fdf0ea]/60"
+                          ? "border-[#06b6d4]/30 bg-[#fdf0ea]/60"
                           : isOver
-                          ? "border-[#aa4918] bg-[#fdf0ea]"
-                          : "border-gray-200 hover:border-[#aa4918]/30"
+                          ? "border-[#06b6d4] bg-[#fdf0ea]"
+                          : "border-gray-200 hover:border-[#06b6d4]/30"
                         }`}
                       onDragOver={(e) => { e.preventDefault(); setDragOver(cellKey); }}
                       onDragLeave={() => setDragOver(null)}
@@ -222,7 +222,7 @@ export default function Mesas() {
                           className="flex flex-col items-center gap-1.5 cursor-grab active:cursor-grabbing p-1 select-none"
                         >
                           {/* mesa circle */}
-                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#aa4918] text-white font-bold text-lg shadow-sm">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#06b6d4] text-white font-bold text-lg shadow-sm">
                             {table.number}
                           </div>
 

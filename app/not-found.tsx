@@ -6,11 +6,11 @@ export default function NotFound() {
       <div className="text-center max-w-sm">
         {/* Animated 404 */}
         <div className="relative mb-8">
-          <span className="text-[120px] font-bold leading-none bg-clip-text text-transparent bg-gradient-to-br from-primary/20 to-orange-600/20 select-none">
+          <span className="text-[120px] font-bold leading-none bg-clip-text text-transparent bg-gradient-to-br from-primary/20 to-cyan-600/20 select-none">
             404
           </span>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center shadow-xl shadow-primary/30">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center shadow-xl shadow-primary/30">
               <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>

@@ -193,7 +193,7 @@ export default function ConsumoPage() {
               {activeSection === tab.id && (
                 <motion.div
                   layoutId="section-dot"
-                  className="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(242,101,34,1)]"
+                  className="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(6,182,212,1)]"
                 />
               )}
             </button>

@@ -70,7 +70,7 @@ export default function ConsumosPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5 mb-0.5">
-              <ClipboardList className="text-[#aa4918]" size={22} />
+              <ClipboardList className="text-[#06b6d4]" size={22} />
               <h1 className="text-2xl font-bold text-gray-900">Historial de Consumos</h1>
             </div>
             <p className="text-sm text-gray-500 pl-8">Registro de comidas validadas en recepción</p>

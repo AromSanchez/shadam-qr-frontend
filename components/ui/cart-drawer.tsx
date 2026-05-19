@@ -67,7 +67,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-white/5">
               <div className="flex items-center gap-3 text-slate-900 dark:text-white">
-                <ShoppingBag className="w-5 h-5 text-amber-500" />
+                <ShoppingBag className="w-5 h-5 text-cyan-500" />
                 <h2 className="text-xl font-bold font-display">Tu Pedido</h2>
               </div>
               <button 
@@ -150,7 +150,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 <button
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white dark:text-[#060913] font-bold text-lg transition-colors flex items-center justify-center disabled:opacity-50"
+                  className="w-full py-4 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white dark:text-[#060913] font-bold text-lg transition-colors flex items-center justify-center disabled:opacity-50"
                 >
                   {isSubmitting ? "Enviando..." : "Confirmar Pedido"}
                 </button>

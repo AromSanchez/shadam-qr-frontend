@@ -128,14 +128,14 @@ export default function QRIdentityPage() {
             <QrCode strokeWidth={1} className="w-full h-full text-slate-900 p-6 transition-transform group-hover:scale-[1.03] duration-500" />
             
             {/* Elite Corner Markers */}
-            <div className="absolute top-4 left-4 w-10 h-10 border-t-8 border-l-8 border-primary rounded-tl-2xl shadow-[0_0_20px_rgba(242,101,34,0.3)]"></div>
-            <div className="absolute top-4 right-4 w-10 h-10 border-t-8 border-r-8 border-primary rounded-tr-2xl shadow-[0_0_20px_rgba(242,101,34,0.3)]"></div>
-            <div className="absolute bottom-4 left-4 w-10 h-10 border-b-8 border-l-8 border-primary rounded-bl-2xl shadow-[0_0_20px_rgba(242,101,34,0.3)]"></div>
-            <div className="absolute bottom-4 right-4 w-10 h-10 border-b-8 border-r-8 border-primary rounded-br-2xl shadow-[0_0_20px_rgba(242,101,34,0.3)]"></div>
+            <div className="absolute top-4 left-4 w-10 h-10 border-t-8 border-l-8 border-primary rounded-tl-2xl shadow-[0_0_20px_rgba(6,182,212,0.3)]"></div>
+            <div className="absolute top-4 right-4 w-10 h-10 border-t-8 border-r-8 border-primary rounded-tr-2xl shadow-[0_0_20px_rgba(6,182,212,0.3)]"></div>
+            <div className="absolute bottom-4 left-4 w-10 h-10 border-b-8 border-l-8 border-primary rounded-bl-2xl shadow-[0_0_20px_rgba(6,182,212,0.3)]"></div>
+            <div className="absolute bottom-4 right-4 w-10 h-10 border-b-8 border-r-8 border-primary rounded-br-2xl shadow-[0_0_20px_rgba(6,182,212,0.3)]"></div>
 
             {/* Premium Scanning Laser */}
             <motion.div 
-              className="absolute top-0 left-0 right-0 h-2 bg-primary shadow-[0_0_30px_rgba(242,101,34,1)] z-10"
+              className="absolute top-0 left-0 right-0 h-2 bg-primary shadow-[0_0_30px_rgba(6,182,212,1)] z-10"
               animate={{ top: ["0%", "100%", "0%"] }}
               transition={{ duration: 3, ease: "easeInOut", repeat: Infinity }}
             />
@@ -151,7 +151,7 @@ export default function QRIdentityPage() {
                 <motion.div 
                    initial={{ width: "100%" }}
                    animate={{ width: `${(timeLeft / 45) * 100}%` }}
-                   className="h-full bg-primary rounded-full shadow-[0_0_10px_rgba(242,101,34,0.5)]"
+                   className="h-full bg-primary rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)]"
                 />
              </div>
           </div>

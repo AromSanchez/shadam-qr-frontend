@@ -145,7 +145,7 @@ export default function DashboardPage() {
                   formatter={(value: any) => [`S/ ${value}`, "Ventas"]}
                 />                <Bar
                   dataKey="ventas"
-                  fill="#aa4918"
+                  fill="#06b6d4"
                   radius={[6, 6, 0, 0]}
                 />
               </BarChart>
@@ -232,7 +232,7 @@ export default function DashboardPage() {
 
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[#aa4918] rounded-full"
+                      className="h-full bg-[#06b6d4] rounded-full"
                       style={{ width: `${dish.pct}%` }}
                     />
                   </div>

@@ -84,7 +84,7 @@ export default function VentasPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5 mb-0.5">
-              <DollarSign className="text-[#aa4918]" size={22} />
+              <DollarSign className="text-[#06b6d4]" size={22} />
               <h1 className="text-2xl font-bold text-gray-900">Ventas y Pedidos</h1>
             </div>
             <p className="text-sm text-gray-500 pl-8">Registro histórico de todas las transacciones</p>
@@ -102,7 +102,7 @@ export default function VentasPage() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <div className="bg-[#aa4918] text-white px-6 py-3 rounded-2xl shadow-lg shadow-orange-900/20 flex items-center gap-3">
+          <div className="bg-[#06b6d4] text-white px-6 py-3 rounded-2xl shadow-lg shadow-orange-900/20 flex items-center gap-3">
              <ShoppingBag size={20} />
              <div>
                <p className="text-[10px] uppercase font-bold opacity-80">Total Recaudado</p>
@@ -185,7 +185,7 @@ export default function VentasPage() {
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-[#aa4918]">Detalle del Pedido</DialogTitle>
+            <DialogTitle className="text-[#06b6d4]">Detalle del Pedido</DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-4 pt-2">
@@ -205,7 +205,7 @@ export default function VentasPage() {
                 {selectedOrder.items.map((item, i) => (
                   <div key={i} className="flex justify-between items-center text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded bg-orange-100 text-[#aa4918] flex items-center justify-center font-bold text-xs">{item.quantity}</span>
+                      <span className="w-6 h-6 rounded bg-orange-100 text-[#06b6d4] flex items-center justify-center font-bold text-xs">{item.quantity}</span>
                       <span className="font-medium text-slate-700">{item.name}</span>
                     </div>
                     <span className="font-mono text-slate-500">S/ {(item.price * item.quantity).toFixed(2)}</span>
@@ -217,7 +217,7 @@ export default function VentasPage() {
               
               <div className="flex justify-between items-center">
                 <p className="font-bold text-slate-900">Total</p>
-                <p className="text-xl font-black text-[#aa4918] font-mono">S/ {selectedOrder.total.toFixed(2)}</p>
+                <p className="text-xl font-black text-[#06b6d4] font-mono">S/ {selectedOrder.total.toFixed(2)}</p>
               </div>
 
               <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">

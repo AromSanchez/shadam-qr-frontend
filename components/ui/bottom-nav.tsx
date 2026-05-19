@@ -90,7 +90,7 @@ export function BottomNav() {
                       className={cn(
                         "w-6 h-6 mb-1.5 transition-all duration-300",
                         isActive
-                          ? "text-primary drop-shadow-[0_0_8px_rgba(242,101,34,0.4)]"
+                          ? "text-primary drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]"
                           : "text-slate-400 group-hover:text-slate-600"
                       )}
                       strokeWidth={isActive ? 2.5 : 2}
@@ -108,7 +108,7 @@ export function BottomNav() {
                   {isActive && (
                     <motion.div
                       layoutId="nav-dot"
-                      className="absolute -bottom-2 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(242,101,34,0.8)]"
+                      className="absolute -bottom-2 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(6,182,212,0.8)]"
                     />
                   )}
                 </div>

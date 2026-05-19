@@ -114,9 +114,9 @@ export default function MenuDelDiaPage() {
   const iconBtnBase =
     "flex-shrink-0 w-9 h-9 rounded-lg border flex items-center justify-center transition-colors";
   const iconBtnNeutral =
-    `${iconBtnBase} border-gray-200 text-gray-400 hover:border-[#aa4918] hover:text-[#aa4918] hover:bg-[#fdf0ea]`;
+    `${iconBtnBase} border-gray-200 text-gray-400 hover:border-[#06b6d4] hover:text-[#06b6d4] hover:bg-[#fdf0ea]`;
   const iconBtnActive =
-    `${iconBtnBase} border-[#aa4918] text-[#aa4918] bg-[#fdf0ea]`;
+    `${iconBtnBase} border-[#06b6d4] text-[#06b6d4] bg-[#fdf0ea]`;
   const iconBtnDanger =
     `${iconBtnBase} border-gray-200 text-gray-400 hover:border-red-400 hover:text-red-500 hover:bg-red-50`;
 
@@ -131,7 +131,7 @@ export default function MenuDelDiaPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
               <div className="flex items-center gap-2.5 mb-0.5">
-                <UtensilsCrossed className="text-[#aa4918]" size={22} />
+                <UtensilsCrossed className="text-[#06b6d4]" size={22} />
                 <h1 className="text-2xl font-bold text-gray-900">Menú del Día</h1>
               </div>
               <p className="text-sm text-gray-500 pl-8">Configura las entradas y grupos de menú</p>
@@ -142,18 +142,18 @@ export default function MenuDelDiaPage() {
                 <DialogTrigger asChild>
                   <Button
                     variant="outline"
-                    className="gap-2 border-[#aa4918] text-[#aa4918] hover:bg-[#fdf0ea] hover:text-[#aa4918] w-full sm:w-auto"
+                    className="gap-2 border-[#06b6d4] text-[#06b6d4] hover:bg-[#fdf0ea] hover:text-[#06b6d4] w-full sm:w-auto"
                   >
                     <Eye size={15} /> Vista previa
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
-                    <DialogTitle className="text-[#aa4918]">Vista Previa del Menú</DialogTitle>
+                    <DialogTitle className="text-[#06b6d4]">Vista Previa del Menú</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-5 pt-2">
                     <div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-[#aa4918] mb-2">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-[#06b6d4] mb-2">
                         Entradas
                       </p>
                       {entradas.filter((e) => e.name.trim()).map((e) => (
@@ -165,7 +165,7 @@ export default function MenuDelDiaPage() {
                     </div>
                     {groups.map((g) => (
                       <div key={g.id}>
-                        <p className="text-[11px] font-bold uppercase tracking-widest text-[#aa4918] mb-2 flex items-center gap-1.5">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-[#06b6d4] mb-2 flex items-center gap-1.5">
                           <Tag size={11} /> Menú S/ {g.price || "?"}
                         </p>
                         {g.dishes.filter((d) => d.name.trim()).map((d) => (
@@ -182,7 +182,7 @@ export default function MenuDelDiaPage() {
 
               <Button
                 onClick={handleSave}
-                className="gap-2 bg-[#aa4918] hover:bg-[#c05520] text-white w-full sm:w-auto"
+                className="gap-2 bg-[#06b6d4] hover:bg-[#c05520] text-white w-full sm:w-auto"
               >
                 <Save size={15} /> Guardar Menú
               </Button>
@@ -193,8 +193,8 @@ export default function MenuDelDiaPage() {
           <div className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
             <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
               <div className="flex items-center gap-2">
-                <Layers size={14} className="text-[#aa4918]" />
-                <span className="text-xs font-bold uppercase tracking-widest text-[#aa4918]">
+                <Layers size={14} className="text-[#06b6d4]" />
+                <span className="text-xs font-bold uppercase tracking-widest text-[#06b6d4]">
                   Entradas
                 </span>
               </div>
@@ -202,7 +202,7 @@ export default function MenuDelDiaPage() {
                 variant="ghost"
                 size="sm"
                 onClick={addEntrada}
-                className="h-8 gap-1.5 text-xs font-semibold text-[#aa4918] border border-dashed border-orange-200 hover:bg-[#fdf0ea] hover:border-[#aa4918]"
+                className="h-8 gap-1.5 text-xs font-semibold text-[#06b6d4] border border-dashed border-orange-200 hover:bg-[#fdf0ea] hover:border-[#06b6d4]"
               >
                 <Plus size={13} /> Agregar
               </Button>
@@ -219,7 +219,7 @@ export default function MenuDelDiaPage() {
                       placeholder="Nombre de la entrada…"
                       value={e.name}
                       onChange={(ev) => updateEntrada(e.id, "name", ev.target.value)}
-                      className="focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
+                      className="focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
                     />
                     <button
                       onClick={() => updateEntrada(e.id, "showDetail", !e.showDetail)}
@@ -237,7 +237,7 @@ export default function MenuDelDiaPage() {
                         placeholder="Descripción o detalle opcional…"
                         value={e.detail}
                         onChange={(ev) => updateEntrada(e.id, "detail", ev.target.value)}
-                        className="focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
+                        className="focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
                       />
                     </div>
                   )}
@@ -251,10 +251,10 @@ export default function MenuDelDiaPage() {
             <div key={group.id} className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
               <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
                 <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-[#aa4918] text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                  <span className="w-6 h-6 rounded-full bg-[#06b6d4] text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
                     {gi + 1}
                   </span>
-                  <span className="text-xs font-bold uppercase tracking-widest text-[#aa4918]">
+                  <span className="text-xs font-bold uppercase tracking-widest text-[#06b6d4]">
                     Grupo #{gi + 1}
                   </span>
                 </div>
@@ -268,7 +268,7 @@ export default function MenuDelDiaPage() {
 
               <div className="p-5 space-y-4">
                 <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center gap-1.5 bg-[#fdf0ea] text-[#aa4918] border border-orange-200 rounded-lg px-3 py-2 text-sm font-semibold flex-shrink-0">
+                  <span className="inline-flex items-center gap-1.5 bg-[#fdf0ea] text-[#06b6d4] border border-orange-200 rounded-lg px-3 py-2 text-sm font-semibold flex-shrink-0">
                     <Tag size={12} /> S/
                   </span>
                   <Input
@@ -276,7 +276,7 @@ export default function MenuDelDiaPage() {
                     placeholder="Precio del menú"
                     value={group.price}
                     onChange={(e) => updateGroupPrice(group.id, e.target.value)}
-                    className="max-w-[180px] focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
+                    className="max-w-[180px] focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
                   />
                 </div>
 
@@ -290,7 +290,7 @@ export default function MenuDelDiaPage() {
                           placeholder="Nombre del plato…"
                           value={d.name}
                           onChange={(e) => updateDish(group.id, d.id, "name", e.target.value)}
-                          className="focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
+                          className="focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
                         />
                         <button
                           onClick={() => updateDish(group.id, d.id, "showDetail", !d.showDetail)}
@@ -311,7 +311,7 @@ export default function MenuDelDiaPage() {
                             placeholder="Descripción o acompañamiento…"
                             value={d.detail}
                             onChange={(e) => updateDish(group.id, d.id, "detail", e.target.value)}
-                            className="focus-visible:ring-[#aa4918] focus-visible:border-[#aa4918]"
+                            className="focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
                           />
                         </div>
                       )}
@@ -323,7 +323,7 @@ export default function MenuDelDiaPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => addDish(group.id)}
-                  className="h-8 gap-1.5 text-xs font-semibold text-[#aa4918] border border-dashed border-orange-200 hover:bg-[#fdf0ea] hover:border-[#aa4918]"
+                  className="h-8 gap-1.5 text-xs font-semibold text-[#06b6d4] border border-dashed border-orange-200 hover:bg-[#fdf0ea] hover:border-[#06b6d4]"
                 >
                   <Plus size={13} /> Agregar plato
                 </Button>
@@ -334,7 +334,7 @@ export default function MenuDelDiaPage() {
           {/* ADD GROUP */}
           <button
             onClick={addGroup}
-            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 text-sm font-semibold hover:border-[#aa4918] hover:text-[#aa4918] hover:bg-[#fdf0ea] transition-all"
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 text-sm font-semibold hover:border-[#06b6d4] hover:text-[#06b6d4] hover:bg-[#fdf0ea] transition-all"
           >
             <Plus size={16} /> Agregar nuevo grupo de menú
           </button>
