@@ -12,7 +12,7 @@ interface LoginModalProps {
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const { login } = useAuth();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -22,7 +22,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     
     // Simulate network request
     setTimeout(() => {
-      login(username);
+      login(email);
       setIsLoading(false);
       onClose();
     }, 1200);
@@ -79,9 +79,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                   <input
                     type="text"
                     required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Usuario"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Correo electrónico"
                     className="w-full h-12 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-slate-900 dark:text-white"
                   />
                 </div>
