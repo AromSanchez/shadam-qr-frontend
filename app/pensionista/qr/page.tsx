@@ -1,26 +1,35 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Clock, ShieldCheck, QrCode, Coffee, Utensils, MoonStar, Zap, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { HeaderProfile } from "@/components/ui/header-profile";
 import { useAuth } from "@/lib/auth-context";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import Link from "next/link";
 import Image from "next/image";
 
 function getCurrentMealTurn() {
   const hour = new Date().getHours();
-  if (hour < 11) return { id: "desayuno", label: "Desayuno", icon: Coffee, time: "7:00 AM - 10:00 AM", color: "text-amber-500", bg: "bg-amber-50" };
-  if (hour < 17) return { id: "almuerzo", label: "Almuerzo", icon: Utensils, time: "12:00 PM - 3:00 PM", color: "text-emerald-500", bg: "bg-emerald-50" };
-  return { id: "cena", label: "Cena", icon: MoonStar, time: "7:00 PM - 10:00 PM", color: "text-indigo-500", bg: "bg-indigo-50" };
+  if (hour < 11) return { id: "desayuno", label: "Desayuno", icon: Coffee, time: "7:00 AM - 10:00 AM", color: "text-cyan-500", bg: "bg-cyan-50 dark:bg-cyan-950/20" };
+  if (hour < 17) return { id: "almuerzo", label: "Almuerzo", icon: Utensils, time: "12:00 PM - 3:00 PM", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/20" };
+  return { id: "cena", label: "Cena", icon: MoonStar, time: "7:00 PM - 10:00 PM", color: "text-cyan-600", bg: "bg-cyan-100/30 dark:bg-cyan-950/30" };
 }
 
 export default function QRIdentityPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [timeLeft, setTimeLeft] = useState(45);
   const [currentTurn, setCurrentTurn] = useState(() => getCurrentMealTurn());
   
+  useEffect(() => {
+    if (!user || user.role !== "pensionista") {
+      router.replace("/pensionista");
+    }
+  }, [user, router]);
+
   useEffect(() => {
     const timerId = setInterval(() => {
       setTimeLeft((prev) => {
@@ -36,20 +45,10 @@ export default function QRIdentityPage() {
     return () => clearInterval(turnInterval);
   }, []);
 
-  if (!user) {
+  if (!user || user.role !== "pensionista") {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 pb-24 flex flex-col items-center">
-        <div className="w-full p-6 pb-2 bg-slate-900 rounded-b-[3rem]">
-          <HeaderProfile />
-        </div>
-        <div className="flex-1 flex flex-col items-center justify-center px-10">
-          <div className="text-center p-10 rounded-[3rem] glass-premium shadow-elite border border-slate-100">
-            <ShieldCheck className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-            <h2 className="text-2xl font-black text-slate-800 mb-2 font-display">Identidad Protegida</h2>
-            <p className="text-slate-400 text-sm leading-relaxed">Por favor, valida tu identidad para generar tu pasaporte dinámico de comedor.</p>
-          </div>
-        </div>
-        <BottomNav />
+      <div className="min-h-screen bg-[#060913] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -61,13 +60,13 @@ export default function QRIdentityPage() {
       {/* Dynamic Background Glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
          <motion.div 
-           animate={{ 
-             scale: [1, 1.2, 1],
-             opacity: [0.3, 0.5, 0.3],
-             rotate: [0, 90, 0]
-           }}
-           transition={{ duration: 10, repeat: Infinity }}
-           className="absolute -top-[10%] -right-[10%] w-[60%] h-[40%] bg-primary/5 blur-[120px] rounded-full"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.5, 0.3],
+              rotate: [0, 90, 0]
+            }}
+            transition={{ duration: 10, repeat: Infinity }}
+            className="absolute -top-[10%] -right-[10%] w-[60%] h-[40%] bg-primary/5 blur-[120px] rounded-full"
          />
          <div className="absolute top-[40%] -left-[10%] w-[50%] h-[30%] bg-emerald-500/5 blur-[100px] rounded-full" />
       </div>
@@ -81,7 +80,7 @@ export default function QRIdentityPage() {
         </div>
       </div>
 
-      <div className="w-full max-w-md px-6 flex-1 flex flex-col mt-8 z-10 relative">
+      <div className="w-full max-w-md px-6 flex-1 flex flex-col mt-8 z-10 relative mx-auto">
         
         {/* Turn Card - Ticket Style */}
         <motion.div
@@ -106,7 +105,7 @@ export default function QRIdentityPage() {
               <div className="text-right">
                  <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black tracking-tighter animate-pulse mb-1">TURNO ACTIVO</Badge>
                  <div className="flex items-center gap-1 justify-end">
-                    <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+                    <Zap className="w-3 h-3 text-cyan-500 fill-cyan-500" />
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">En Tiempo</span>
                  </div>
               </div>
@@ -157,28 +156,30 @@ export default function QRIdentityPage() {
           </div>
         </motion.div>
 
-        {/* User Card */}
-        <div className="glass-premium rounded-[2.5rem] p-6 border border-white/50 shadow-elite flex items-center justify-between">
-          <div className="flex items-center gap-4">
-             <div className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-0.5 shadow-xl">
-                   <div className="w-full h-full rounded-[14px] overflow-hidden bg-slate-800">
-                      <Image src={user.avatar} alt="Avatar" width={56} height={56} className="object-cover" />
-                   </div>
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center">
-                   <ShieldCheck className="w-3 h-3 text-white" />
-                </div>
-             </div>
-             <div>
-               <h3 className="text-base font-black text-slate-800 dark:text-white font-display tracking-tight leading-none mb-1">{user.name}</h3>
-               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: 109.XXX.XXX</p>
-             </div>
+        {/* User Card linking back to digital carnet dashboard */}
+        <Link href="/pensionista">
+          <div className="glass-premium rounded-[2.5rem] p-6 border border-white/50 dark:border-white/5 shadow-elite flex items-center justify-between hover:scale-[1.01] active:scale-[0.99] transition-all bg-white/5 cursor-pointer">
+            <div className="flex items-center gap-4">
+               <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-0.5 shadow-xl">
+                     <div className="w-full h-full rounded-[14px] overflow-hidden bg-slate-800">
+                        <Image src={user.avatar} alt="Avatar" width={56} height={56} className="object-cover" />
+                     </div>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center">
+                     <ShieldCheck className="w-3 h-3 text-white" />
+                  </div>
+               </div>
+               <div>
+                 <h3 className="text-base font-black text-slate-800 dark:text-white font-display tracking-tight leading-none mb-1">{user.name}</h3>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">DNI: {user.dni}</p>
+               </div>
+            </div>
+            <div className="h-12 w-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/5 text-primary font-bold text-xs uppercase font-display">
+               Ver Carnet
+            </div>
           </div>
-          <div className="h-12 w-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-white/5">
-             <Info className="w-5 h-5 text-slate-400" />
-          </div>
-        </div>
+        </Link>
 
         <p className="text-center mt-10 text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em] font-display">
           Seguridad Biométrica Activa

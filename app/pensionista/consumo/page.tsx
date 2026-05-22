@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Clock,
   ShieldCheck,
@@ -55,8 +56,8 @@ function CircularProgress({ percent, label, sublabel }: { percent: number; label
         />
         <defs>
           <linearGradient id="gradient-primary" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#F26522" />
-            <stop offset="100%" stopColor="#F97316" />
+            <stop offset="0%" stopColor="#06b6d4" />
+            <stop offset="100%" stopColor="#0891b2" />
           </linearGradient>
         </defs>
       </svg>
@@ -110,22 +111,23 @@ type SectionView = "asistencias" | "perfil";
 export default function ConsumoPage() {
   const [activeSection, setActiveSection] = useState<SectionView>("asistencias");
   const { user, logout } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user || user.role !== "pensionista") {
+      router.replace("/pensionista");
+    }
+  }, [user, router]);
 
   const totalAsistencias = 28;
   const asistenciasMensualesGoal = 60;
   const percentComplete = (totalAsistencias / asistenciasMensualesGoal) * 100;
   const diasRestantes = 15;
 
-  if (!user) {
+  if (!user || user.role !== "pensionista") {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-3xl flex items-center justify-center mb-6 border border-slate-100 dark:border-white/5 shadow-inner">
-           <ShieldCheck className="w-10 h-10 text-slate-300" />
-        </div>
-        <h2 className="text-2xl font-black text-slate-800 dark:text-white font-display mb-2">Área Privada</h2>
-        <p className="text-slate-400 text-sm max-w-[240px] mb-8 leading-relaxed">Inicia sesión en la cabecera para acceder a tu panel de control y asistencias.</p>
-        <HeaderProfile />
-        <BottomNav />
+      <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -135,7 +137,7 @@ export default function ConsumoPage() {
       {/* ─── Elite Header ─────────────────────────────────── */}
       <div className="relative overflow-hidden bg-slate-900 pt-16 px-6 pb-12 rounded-b-[3.5rem] shadow-2xl">
         <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-primary/10 blur-[100px] -mr-40 -mt-20" />
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-blue-500/10 blur-[80px]" />
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-cyan-500/10 blur-[80px]" />
         
         <div className="relative z-10">
           <HeaderProfile />
@@ -164,7 +166,7 @@ export default function ConsumoPage() {
                 <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mt-2">Días Restantes</p>
              </div>
              <div className="glass-premium rounded-3xl p-5 border-white/10 shadow-2xl bg-white/5 flex flex-col items-center">
-                <p className="text-emerald-400 text-2xl font-black font-display leading-none">4.8</p>
+                <p className="text-cyan-400 text-2xl font-black font-display leading-none">4.8</p>
                 <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mt-2">Rating Chef</p>
              </div>
           </div>
@@ -277,30 +279,30 @@ export default function ConsumoPage() {
                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-display mb-6 ml-1">Bitácora de Accesos</h3>
                <div className="space-y-4">
                  {HISTORY_DATA.map((group, gi) => (
-                   <div key={gi} className="p-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase mb-3 ml-2">{group.date}</p>
-                      <div className="bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] p-2 space-y-1">
-                         {group.items.map(item => (
-                           <div key={item.id} className="bg-white dark:bg-slate-800 rounded-2xl p-4 flex items-center justify-between border border-slate-100 dark:border-white/5 transition-transform hover:scale-[1.01] cursor-pointer">
-                              <div className="flex items-center gap-3">
-                                 <div className={`w-8 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                                   item.status === 'missed' ? 'opacity-30' : 'bg-slate-900 text-white'
-                                 }`}>
-                                    {item.status === 'signed' ? <span className="rotate-90 text-[8px] font-black opacity-40 uppercase tracking-[0.2em] -mt-1">{item.time.split(' ')[0]}</span> : <span className="text-xl font-bold opacity-20 relative top-0.5">!</span>}
-                                 </div>
-                                 <h5 className={`font-black text-xs font-display tracking-widest uppercase ${item.status === 'missed' ? 'text-slate-300 line-through' : 'text-slate-700 dark:text-slate-200'}`}>
-                                    {item.name}
-                                 </h5>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                 {item.status === 'signed' ? (
-                                   <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                                 ) : <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                              </div>
-                           </div>
-                         ))}
-                      </div>
-                   </div>
+                    <div key={gi} className="p-1">
+                       <p className="text-[10px] font-black text-slate-400 uppercase mb-3 ml-2">{group.date}</p>
+                       <div className="bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] p-2 space-y-1">
+                          {group.items.map(item => (
+                            <div key={item.id} className="bg-white dark:bg-slate-800 rounded-2xl p-4 flex items-center justify-between border border-slate-100 dark:border-white/5 transition-transform hover:scale-[1.01] cursor-pointer">
+                               <div className="flex items-center gap-3">
+                                  <div className={`w-8 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                                    item.status === 'missed' ? 'opacity-30' : 'bg-slate-900 text-white'
+                                  }`}>
+                                     {item.status === 'signed' ? <span className="rotate-90 text-[8px] font-black opacity-40 uppercase tracking-[0.2em] -mt-1">{item.time.split(' ')[0]}</span> : <span className="text-xl font-bold opacity-20 relative top-0.5">!</span>}
+                                  </div>
+                                  <h5 className={`font-black text-xs font-display tracking-widest uppercase ${item.status === 'missed' ? 'text-slate-300 line-through' : 'text-slate-700 dark:text-slate-200'}`}>
+                                     {item.name}
+                                  </h5>
+                               </div>
+                               <div className="flex items-center gap-2">
+                                  {item.status === 'signed' ? (
+                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                                  ) : <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                               </div>
+                            </div>
+                          ))}
+                       </div>
+                    </div>
                  ))}
                </div>
             </div>
@@ -317,7 +319,7 @@ export default function ConsumoPage() {
             <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-elite border border-slate-100 dark:border-white/5 overflow-hidden">
                <div className="p-10 text-center flex flex-col items-center">
                   <div className="relative mb-6">
-                     <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-tr from-primary to-orange-500 p-0.5 shadow-2xl">
+                     <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-tr from-primary to-cyan-600 p-0.5 shadow-2xl">
                         <div className="w-full h-full rounded-[30px] overflow-hidden bg-slate-900">
                            <img src={user.avatar} className="w-full h-full object-cover" alt="" />
                         </div>
@@ -334,11 +336,11 @@ export default function ConsumoPage() {
                   <div className="w-full space-y-4 pt-4 border-t border-slate-50 dark:border-white/5">
                      <div className="flex items-center justify-between px-2">
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">Identificación</span>
-                        <span className="text-xs font-black text-slate-800 dark:text-white font-display">{USER_MOCK.id}</span>
+                        <span className="text-xs font-black text-slate-800 dark:text-white font-display">{user.dni || USER_MOCK.id}</span>
                      </div>
                      <div className="flex items-center justify-between px-2">
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">Antigüedad</span>
-                        <span className="text-xs font-black text-slate-800 dark:text-white font-display">{USER_MOCK.memberSince}</span>
+                        <span className="text-xs font-black text-slate-800 dark:text-white font-display">{user.startDate ? new Date(user.startDate).toLocaleDateString() : USER_MOCK.memberSince}</span>
                      </div>
                   </div>
                </div>

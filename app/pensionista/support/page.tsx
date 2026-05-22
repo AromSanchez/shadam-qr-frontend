@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, MessageCircle, HelpCircle, ChevronDown, ChevronUp, Send, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { useAuth } from "@/lib/auth-context";
 import { motion, AnimatePresence } from "framer-motion";
 
 const FAQ_DATA = [
@@ -31,9 +33,25 @@ const FAQ_DATA = [
 ];
 
 export default function SupportPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    if (!user || user.role !== "pensionista") {
+      router.replace("/pensionista");
+    }
+  }, [user, router]);
+
+  if (!user || user.role !== "pensionista") {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   const handleSend = () => {
     if (message.trim()) {
@@ -48,7 +66,7 @@ export default function SupportPage() {
       {/* Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-6 pt-6 pb-6">
         <div className="flex items-center justify-between mb-4">
-          <Link href="/">
+          <Link href="/pensionista">
             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
               <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
             </div>
@@ -155,7 +173,7 @@ export default function SupportPage() {
                 ¡Mensaje enviado! Te responderemos pronto.
               </div>
             ) : (
-              <Button onClick={handleSend} className="w-full flex gap-2" disabled={!message.trim()}>
+              <Button onClick={handleSend} className="w-full flex gap-2 rounded-2xl h-12 font-bold cursor-pointer" disabled={!message.trim()}>
                 <Send className="w-4 h-4" />
                 Enviar Mensaje
               </Button>

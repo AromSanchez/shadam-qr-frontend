@@ -52,8 +52,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-[2rem] p-6 shadow-2xl border border-white/20 dark:border-slate-800 flex flex-col relative overflow-hidden">
               
               {/* Top gradients for premium feel */}
-              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/20 via-orange-400/10 to-transparent -z-10" />
-              <div className="absolute -top-10 -right-10 w-32 h-32 bg-orange-500/20 rounded-full blur-2xl -z-10" />
+              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/20 via-cyan-400/10 to-transparent -z-10" />
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/20 rounded-full blur-2xl -z-10" />
 
               <button
                 onClick={onClose}
@@ -103,7 +103,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="relative w-full h-14 bg-gradient-to-r from-primary to-orange-500 text-white rounded-2xl font-bold mt-2 shadow-lg shadow-primary/25 overflow-hidden group hover:from-orange-500 hover:to-primary transition-all disabled:opacity-80"
+                  className="relative w-full h-14 bg-gradient-to-r from-primary to-cyan-500 text-white rounded-2xl font-bold mt-2 shadow-lg shadow-primary/25 overflow-hidden group hover:from-cyan-500 hover:to-primary transition-all disabled:opacity-80"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     {isLoading ? "Validando..." : "Iniciar Sesión"}

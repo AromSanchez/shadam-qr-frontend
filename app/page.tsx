@@ -74,8 +74,8 @@ export default function MenuLandingPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#060913] transition-colors duration-500 pb-40 overflow-hidden relative">
       {/* ─── Premium Background Glows ─────────────────────────────────── */}
-      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-[100px] pointer-events-none transition-colors duration-500" />
-      <div className="fixed bottom-0 right-0 w-[400px] h-[400px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none transition-colors duration-500" />
+      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-cyan-500/10 dark:bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none transition-colors duration-500" />
+      <div className="fixed bottom-0 right-0 w-[400px] h-[400px] bg-cyan-500/10 dark:bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none transition-colors duration-500" />
 
       {/* ─── Premium Header ─────────────────────────────────── */}
       <div className="relative pt-12 px-6 pb-6 z-10">
@@ -129,7 +129,7 @@ export default function MenuLandingPage() {
             onClick={() => setActiveCategory("todos")}
             className={`whitespace-nowrap px-5 py-2.5 rounded-2xl text-xs font-bold tracking-widest transition-all flex items-center gap-2 ${
               activeCategory === "todos"
-                ? "bg-amber-500 text-white dark:text-[#060913] shadow-[0_4px_14px_rgba(245,158,11,0.3)]"
+                ? "bg-cyan-500 text-white dark:text-[#060913] shadow-[0_4px_14px_rgba(6,182,212,0.3)]"
                 : "bg-white dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent"
             }`}
           >
@@ -140,11 +140,11 @@ export default function MenuLandingPage() {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`whitespace-nowrap px-5 py-2.5 rounded-2xl text-xs font-bold tracking-widest transition-all flex items-center gap-2 ${
-                activeCategory === cat.id
-                  ? "bg-amber-500 text-white dark:text-[#060913] shadow-[0_4px_14px_rgba(245,158,11,0.3)]"
-                  : "bg-white dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent"
-              }`}
+               className={`whitespace-nowrap px-5 py-2.5 rounded-2xl text-xs font-bold tracking-widest transition-all flex items-center gap-2 ${
+                 activeCategory === "todos"
+                   ? "bg-cyan-500 text-white dark:text-[#060913] shadow-[0_4px_14px_rgba(6,182,212,0.3)]"
+                   : "bg-white dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent"
+               }`}
             >
               <span className="uppercase">{cat.name}</span>
             </button>
@@ -175,9 +175,7 @@ export default function MenuLandingPage() {
                      <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white font-display tracking-wide transition-colors duration-500">
                        {product.name}
                      </h3>
-                     <span className="text-amber-600 dark:text-amber-400 font-bold text-lg whitespace-nowrap">
-                       S/ {product.price.toFixed(2)}
-                     </span>
+                      <span className="text-cyan-600 dark:text-cyan-400 font-bold text-lg whitespace-nowrap">{product.price.toFixed(2)}</span>
                   </div>
                   
                   <p className="text-slate-500 dark:text-slate-400 text-sm font-light leading-relaxed mb-6 transition-colors duration-500">
@@ -193,14 +191,7 @@ export default function MenuLandingPage() {
                          </span>
                        </div>
                      </div>
-                     
-                     <button
-                       onClick={() => addToCart(product)}
-                       className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white dark:text-[#060913] px-3 py-1.5 rounded-xl text-xs font-bold transition-colors shadow-md"
-                     >
-                       <Plus className="w-3.5 h-3.5" />
-                       Añadir
-                     </button>
+                    
                   </div>
                 </motion.div>
               ))}

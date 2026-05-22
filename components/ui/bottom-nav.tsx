@@ -11,10 +11,11 @@ type TabId = "menu" | "qr" | "consumo";
 
 export function BottomNav() {
   const pathname = usePathname();
+  const isPensionistRoute = pathname.startsWith("/pensionista");
 
   const getActiveTab = (): TabId => {
-    if (pathname === "/consumo") return "consumo";
-    if (pathname === "/qr") return "qr";
+    if (pathname === "/consumo" || pathname === "/pensionista/consumo") return "consumo";
+    if (pathname === "/qr" || pathname === "/pensionista/qr" || pathname === "/pensionista") return "qr";
     return "menu";
   };
 
@@ -22,9 +23,15 @@ export function BottomNav() {
 
   const tabs: { id: TabId; label: string; icon: React.ElementType; href: string; isPrimary?: boolean }[] = [
     { id: "menu", label: "Menú", icon: Utensils, href: "/" },
-    { id: "qr", label: "Mi QR", icon: QrCode, href: "/qr", isPrimary: true },
-    { id: "consumo", label: "Consumo", icon: BarChart3, href: "/consumo" },
+    { id: "qr", label: "Mi QR", icon: QrCode, href: "/pensionista/qr", isPrimary: true },
+    { id: "consumo", label: "Consumo", icon: BarChart3, href: "/pensionista/consumo" },
   ];
+
+  // Dynamic theme variables
+  const activeColorClass = isPensionistRoute ? "text-cyan-500" : "text-amber-500";
+  const activeDotClass = isPensionistRoute ? "bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.8)]" : "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]";
+  const activePulseClass = isPensionistRoute ? "bg-cyan-500/30" : "bg-amber-500/30";
+  const activeIconDropShadow = isPensionistRoute ? "drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]" : "drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]";
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 px-6 pb-6" aria-label="Navegación principal">
@@ -46,7 +53,7 @@ export function BottomNav() {
                       {isActive && (
                         <motion.div 
                           layoutId="primary-pulse"
-                          className="absolute inset-0 bg-primary/30 rounded-full blur-xl"
+                          className={cn("absolute inset-0 rounded-full blur-xl", activePulseClass)}
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{ duration: 2, repeat: Infinity }}
                         />
@@ -56,8 +63,10 @@ export function BottomNav() {
                         whileHover={{ scale: 1.05 }}
                         className={cn(
                           "relative w-16 h-16 rounded-full flex items-center justify-center text-white shadow-2xl",
-                          "bg-gradient-to-br from-primary via-orange-500 to-orange-600",
-                          "ring-4 ring-white dark:ring-slate-900 shadow-primary/40"
+                          isPensionistRoute 
+                            ? "bg-gradient-to-br from-cyan-400 via-cyan-500 to-cyan-600 shadow-cyan-500/30"
+                            : "bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 shadow-amber-500/30",
+                          "ring-4 ring-white dark:ring-slate-900"
                         )}
                       >
                         <Icon className="w-7 h-7" strokeWidth={2.5} />
@@ -65,7 +74,7 @@ export function BottomNav() {
                     </div>
                     <span className={cn(
                       "text-[10px] font-black mt-2 tracking-widest uppercase font-display transition-colors",
-                      isActive ? "text-primary" : "text-slate-400 group-hover:text-slate-600"
+                      isActive ? activeColorClass : "text-slate-400 group-hover:text-slate-600"
                     )}>
                       {tab.label}
                     </span>
@@ -90,7 +99,7 @@ export function BottomNav() {
                       className={cn(
                         "w-6 h-6 mb-1.5 transition-all duration-300",
                         isActive
-                          ? "text-primary drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]"
+                          ? cn(activeColorClass, activeIconDropShadow)
                           : "text-slate-400 group-hover:text-slate-600"
                       )}
                       strokeWidth={isActive ? 2.5 : 2}
@@ -99,7 +108,7 @@ export function BottomNav() {
                   <span
                     className={cn(
                       "text-[10px] font-bold tracking-widest uppercase font-display transition-all duration-300",
-                      isActive ? "text-primary" : "text-slate-400 group-hover:text-slate-600"
+                      isActive ? activeColorClass : "text-slate-400 group-hover:text-slate-600"
                     )}
                   >
                     {tab.label}
@@ -108,7 +117,7 @@ export function BottomNav() {
                   {isActive && (
                     <motion.div
                       layoutId="nav-dot"
-                      className="absolute -bottom-2 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(6,182,212,0.8)]"
+                      className={cn("absolute -bottom-2 w-1.5 h-1.5 rounded-full", activeDotClass)}
                     />
                   )}
                 </div>

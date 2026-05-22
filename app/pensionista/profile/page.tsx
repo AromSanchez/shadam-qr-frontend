@@ -1,39 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, User, Shield, CreditCard, Bell, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { useAuth } from "@/lib/auth-context";
 import { motion } from "framer-motion";
 
 export default function ProfilePage() {
+  const { user, logout } = useAuth();
+  const router = useRouter();
   const [darkMode, setDarkMode] = useState(false);
 
-  const user = {
-    name: "Ricardo Alzate Moreno",
-    email: "ricardo.alzate@email.com",
+  useEffect(() => {
+    if (!user || user.role !== "pensionista") {
+      router.replace("/pensionista");
+    }
+  }, [user, router]);
+
+  if (!user || user.role !== "pensionista") {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const profileData = {
+    name: user.name,
+    email: user.code ? `${user.code.toLowerCase()}@shadam.com` : "pensionista@shadam.com",
     phone: "+51 999 888 777",
-    plan: "Menú Mensual",
-    memberSince: "Enero 2026",
-    id: "1.092.384.XX",
+    plan: user.planType || "Menú Mensual",
+    memberSince: user.startDate ? new Date(user.startDate).toLocaleDateString() : "Enero 2026",
+    id: user.dni || "1.092.384.XX",
   };
 
   const menuItems = [
     {
       id: "plan",
       label: "Mi Plan",
-      description: "Menú Mensual — Activo",
+      description: `${profileData.plan} — Activo`,
       icon: CreditCard,
-      color: "text-primary bg-orange-50 dark:bg-orange-900/20",
+      color: "text-primary bg-cyan-50 dark:bg-cyan-900/20",
     },
     {
       id: "notifications",
       label: "Notificaciones",
       description: "Push y correo activados",
       icon: Bell,
-      color: "text-amber-500 bg-amber-50 dark:bg-amber-900/20",
+      color: "text-cyan-500 bg-cyan-50 dark:bg-cyan-900/20",
     },
     {
       id: "security",
@@ -49,7 +67,7 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-6 pt-6 pb-6">
         <div className="flex items-center justify-between mb-6">
-          <Link href="/">
+          <Link href="/pensionista">
             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
               <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
             </div>
@@ -61,9 +79,9 @@ export default function ProfilePage() {
         {/* Avatar & Info */}
         <div className="flex flex-col items-center">
           <div className="relative mb-4">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-orange-600 p-[3px] shadow-xl shadow-primary/20">
-              <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center">
-                <User className="w-10 h-10 text-primary" />
+            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-cyan-600 p-[3px] shadow-xl shadow-primary/20">
+              <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden">
+                <img src={user.avatar} className="w-full h-full object-cover" alt="Profile avatar" />
               </div>
             </div>
             <Badge
@@ -73,9 +91,9 @@ export default function ProfilePage() {
               Pensionista
             </Badge>
           </div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white mt-2">{user.name}</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{user.email}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Miembro desde {user.memberSince}</p>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white mt-2">{profileData.name}</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{profileData.email}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Miembro desde {profileData.memberSince}</p>
         </div>
       </div>
 
@@ -148,8 +166,9 @@ export default function ProfilePage() {
 
         {/* Logout */}
         <Button
+          onClick={logout}
           variant="outline"
-          className="w-full flex gap-2 text-danger border-danger/20 hover:bg-danger/5 hover:text-danger"
+          className="w-full flex gap-2 text-danger border-danger/20 hover:bg-danger/5 hover:text-danger rounded-2xl h-14 font-bold cursor-pointer"
         >
           <LogOut className="w-5 h-5" />
           Cerrar Sesión
@@ -157,7 +176,7 @@ export default function ProfilePage() {
 
         {/* Version */}
         <p className="text-center text-xs text-slate-400 dark:text-slate-600">
-          Restaurante Inteligente v2.0 • ID: {user.id}
+          Restaurante Inteligente v2.0 • ID: {profileData.id}
         </p>
       </main>
 

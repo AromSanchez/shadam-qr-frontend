@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, Coffee, Utensils, Calendar, Filter, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Coffee, Utensils, Calendar, Filter } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { useAuth } from "@/lib/auth-context";
 import { motion } from "framer-motion";
 
 const HISTORY_DATA = [
@@ -35,8 +37,24 @@ const HISTORY_DATA = [
 type FilterType = "all" | "food" | "drinks";
 
 export default function HistoryPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [filter, setFilter] = useState<FilterType>("all");
   const [showFilter, setShowFilter] = useState(false);
+
+  useEffect(() => {
+    if (!user || user.role !== "pensionista") {
+      router.replace("/pensionista");
+    }
+  }, [user, router]);
+
+  if (!user || user.role !== "pensionista") {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   const totalSpent = HISTORY_DATA.flatMap(d => d.items).reduce((a, b) => a + b.price, 0);
   const totalPlan = HISTORY_DATA.flatMap(d => d.items).filter(i => i.method === "plan").length;
@@ -46,12 +64,12 @@ export default function HistoryPage() {
       {/* Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-6 pt-6 pb-4">
         <div className="flex items-center justify-between mb-6">
-          <Link href="/">
+          <Link href="/pensionista">
             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
               <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
             </div>
           </Link>
-          <h1 className="text-lg font-bold text-slate-800 dark:text-white">Historial</h1>
+          <h1 className="text-lg font-bold text-slate-800 dark:text-white">Historial de Consumo</h1>
           <button
             title="Filtrar historial"
             onClick={() => setShowFilter(!showFilter)}
@@ -63,11 +81,11 @@ export default function HistoryPage() {
 
         {/* Stats Bar */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
+          <div className="bg-slate-50 dark:bg-slate-850 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
             <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Gasto total</p>
             <p className="text-2xl font-bold text-slate-800 dark:text-white">S/ {totalSpent.toFixed(2)}</p>
           </div>
-          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-2xl p-4 border border-orange-100 dark:border-orange-900/30">
+          <div className="bg-cyan-50/50 dark:bg-cyan-950/20 rounded-2xl p-4 border border-cyan-100/50 dark:border-cyan-900/10">
             <p className="text-xs font-semibold text-primary uppercase mb-1">Con plan</p>
             <p className="text-2xl font-bold text-primary">{totalPlan} comidas</p>
           </div>
