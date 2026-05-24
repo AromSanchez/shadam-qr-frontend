@@ -127,6 +127,7 @@ interface PosContextValue {
   toggleDarkMode: () => void
   refrescarModo: () => void
   mostrarToast: (toast: Omit<Toast, 'id'>) => void
+  ocultarToast: (id: string) => void
 }
 
 const PosContext = createContext<PosContextValue | null>(null)
@@ -307,6 +308,10 @@ export function PosProvider({ children }: { children: React.ReactNode }) {
     }, toast.duracion || 3000)
   }, [])
 
+  const ocultarToast = useCallback((id: string) => {
+    dispatch({ type: 'REMOVE_TOAST', payload: id })
+  }, [])
+
   const value: PosContextValue = {
     state,
     actualizarMesa,
@@ -322,6 +327,7 @@ export function PosProvider({ children }: { children: React.ReactNode }) {
     toggleDarkMode,
     refrescarModo,
     mostrarToast,
+    ocultarToast,
   }
 
   return <PosContext.Provider value={value}>{children}</PosContext.Provider>

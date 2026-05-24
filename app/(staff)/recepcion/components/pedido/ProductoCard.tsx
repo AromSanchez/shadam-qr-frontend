@@ -1,8 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import type { Producto, TipoCliente } from '../../lib/types'
 import { formatearPrecio } from '../../lib/utils'
-import { Plus, Minus, PackageOpen } from 'lucide-react'
+import { Plus, Minus, Package, Star } from 'lucide-react'
 
 interface ProductoCardProps {
   producto: Producto
@@ -15,74 +16,136 @@ interface ProductoCardProps {
 }
 
 export default function ProductoCard({
-  producto, cantidad, deshabilitado, tipoCliente, onAgregarAqui, onAgregarParaLlevar, onQuitar,
+  producto,
+  cantidad,
+  deshabilitado,
+  tipoCliente,
+  onAgregarAqui,
+  onAgregarParaLlevar,
+  onQuitar,
 }: ProductoCardProps) {
-  const precio = tipoCliente === 'regular' ? producto.precioRegular : producto.precioPension
+  const [pressing, setPressing] = useState(false)
+  const esPensionista = tipoCliente !== 'regular'
+  const precio = esPensionista ? producto.precioPension : producto.precioRegular
+  const activo = cantidad > 0
 
   return (
     <div
-      className="relative rounded-xl p-3 flex flex-col justify-between transition-all duration-200"
+      className="relative flex flex-col rounded-[20px] transition-all select-none"
       style={{
-        backgroundColor: cantidad > 0 ? 'rgba(192, 113, 74, 0.08)' : 'var(--pos-card)',
-        border: `1.5px solid ${cantidad > 0 ? 'var(--pos-primary)' : 'var(--pos-border)'}`,
-        opacity: deshabilitado ? 0.45 : 1,
-        cursor: deshabilitado ? 'not-allowed' : 'default',
+        minHeight: '120px',
+        opacity: deshabilitado ? 0.4 : 1,
         pointerEvents: deshabilitado ? 'none' : 'auto',
-        minHeight: '100px',
+        cursor: deshabilitado ? 'not-allowed' : 'pointer',
+        backgroundColor: activo ? 'color-mix(in srgb, var(--pos-primary) 8%, var(--pos-card))' : 'var(--pos-card)',
+        border: `1.5px solid ${activo ? 'var(--pos-primary)' : 'var(--pos-border)'}`,
+        boxShadow: activo ? 'var(--pos-shadow-cyan)' : 'var(--pos-shadow-sm)',
+        transform: pressing ? 'scale(0.97) translateY(1px)' : 'scale(1) translateY(0)',
+        transition: 'transform 200ms var(--pos-ease-spring), box-shadow 200ms ease, background-color 200ms ease, border-color 200ms ease',
       }}
+      onPointerDown={() => setPressing(true)}
+      onPointerUp={() => { setPressing(false); onAgregarAqui() }}
+      onPointerLeave={() => setPressing(false)}
     >
-      {/* Quantity badge */}
-      {cantidad > 0 && (
+      {/* Floating quantity badge */}
+      {activo && (
         <span
-          className="absolute -top-2 -right-2 min-w-[22px] h-[22px] rounded-full text-[11px] font-bold flex items-center justify-center text-white px-1 shadow-sm"
-          style={{ backgroundColor: 'var(--pos-primary)' }}
+          className="absolute -top-2.5 -right-2.5 min-w-[26px] h-[26px] rounded-full text-[11px] font-bold font-heading flex items-center justify-center text-white px-1.5 z-10 animate-bounce-in"
+          style={{
+            backgroundColor: 'var(--pos-primary)',
+            boxShadow: '0 0 10px color-mix(in srgb, var(--pos-primary) 60%, transparent)',
+          }}
         >
           {cantidad}
         </span>
       )}
 
-      {/* Favorite star */}
+      {/* Favorite star — top-left */}
       {producto.esFavorito && (
-        <span className="absolute top-2 right-2 text-xs">⭐</span>
+        <span
+          className="absolute top-2.5 left-2.5 z-10"
+          style={{ color: '#FBBF24' }}
+        >
+          <Star size={13} fill="currentColor" />
+        </span>
       )}
 
-      {/* Info */}
-      <div className="mb-2">
-        <h4 className="text-sm font-semibold leading-tight mb-0.5" style={{ color: 'var(--pos-text)' }}>
+      {/* Card body — not interactive so inner buttons can capture clicks */}
+      <div className="flex flex-col flex-1 p-3 pt-3.5">
+        {/* Name */}
+        <h4
+          className="font-heading text-sm font-bold leading-snug tracking-tight mb-1 line-clamp-2"
+          style={{ color: 'var(--pos-text)' }}
+        >
           {producto.nombre}
         </h4>
-        <span className="text-xs" style={{ color: 'var(--pos-text-muted)' }}>
+
+        {/* Price */}
+        <span
+          className="text-xs font-semibold tabular-nums mb-auto"
+          style={{ color: esPensionista ? 'var(--pos-primary)' : 'var(--pos-text-muted)' }}
+        >
           {formatearPrecio(precio)}
         </span>
-      </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1.5 mt-auto">
-        {cantidad > 0 && (
-          <button
-            onClick={onQuitar}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 active:scale-[0.9]"
-            style={{ backgroundColor: 'var(--pos-danger-bg)', color: 'var(--pos-danger)' }}
-          >
-            <Minus size={14} />
-          </button>
-        )}
-        <button
-          onClick={onAgregarAqui}
-          className="flex-1 h-8 rounded-lg flex items-center justify-center gap-1 text-xs font-medium transition-all duration-150 active:scale-[0.95]"
-          style={{ backgroundColor: 'var(--pos-success-bg)', color: 'var(--pos-success)' }}
+        {/* Controls row */}
+        <div
+          className="flex items-center gap-1.5 mt-2.5"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
-          <Plus size={14} />
-          Aquí
-        </button>
-        <button
-          onClick={onAgregarParaLlevar}
-          className="h-8 px-2 rounded-lg flex items-center justify-center gap-1 text-xs font-medium transition-all duration-150 active:scale-[0.95]"
-          style={{ backgroundColor: 'var(--pos-warning-bg)', color: 'var(--pos-warning)' }}
-          title="Para llevar"
-        >
-          <PackageOpen size={14} />
-        </button>
+          {activo ? (
+            <>
+              {/* Minus */}
+              <button
+                onPointerDown={(e) => { e.stopPropagation(); setPressing(false) }}
+                onClick={(e) => { e.stopPropagation(); onQuitar() }}
+                className="touch-target w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 active:scale-90 shrink-0"
+                style={{ backgroundColor: 'var(--pos-danger-bg)', color: 'var(--pos-danger)' }}
+                aria-label="Quitar uno"
+              >
+                <Minus size={15} />
+              </button>
+
+              {/* Plus */}
+              <button
+                onPointerDown={(e) => { e.stopPropagation(); setPressing(false) }}
+                onClick={(e) => { e.stopPropagation(); onAgregarAqui() }}
+                className="touch-target flex-1 h-9 rounded-xl flex items-center justify-center gap-1 text-xs font-semibold font-heading transition-all duration-150 active:scale-[0.95]"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--pos-primary) 15%, transparent)', color: 'var(--pos-primary)' }}
+                aria-label="Agregar aquí"
+              >
+                <Plus size={15} />
+                Aquí
+              </button>
+
+              {/* Para llevar */}
+              <button
+                onPointerDown={(e) => { e.stopPropagation(); setPressing(false) }}
+                onClick={(e) => { e.stopPropagation(); onAgregarParaLlevar() }}
+                className="touch-target w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 active:scale-90 shrink-0"
+                style={{ backgroundColor: 'var(--pos-warning-bg)', color: 'var(--pos-warning)' }}
+                aria-label="Para llevar"
+                title="Para llevar"
+              >
+                <Package size={15} />
+              </button>
+            </>
+          ) : (
+            /* Initial add button when qty = 0 */
+            <button
+              onPointerDown={(e) => { e.stopPropagation(); setPressing(false) }}
+              onClick={(e) => { e.stopPropagation(); onAgregarAqui() }}
+              className="touch-target flex-1 h-9 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold font-heading transition-all duration-150 active:scale-[0.95]"
+              style={{ backgroundColor: 'var(--pos-surface-2)', color: 'var(--pos-text-muted)' }}
+              aria-label="Agregar producto"
+            >
+              <Plus size={15} />
+              Agregar
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

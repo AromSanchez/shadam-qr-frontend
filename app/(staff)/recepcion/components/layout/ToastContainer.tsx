@@ -1,45 +1,112 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
+import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react'
 import { usePosContext } from '../../context/PosContext'
-import { CheckCircle, AlertTriangle, XCircle, Info } from 'lucide-react'
+import type { Toast } from '../../lib/types'
 
-const iconMap = {
+const ICONS = {
   success: CheckCircle,
-  error: XCircle,
+  error:   XCircle,
   warning: AlertTriangle,
-  info: Info,
+  info:    Info,
 }
-const colorMap = {
+
+const COLORS = {
   success: 'var(--pos-success)',
-  error: 'var(--pos-danger)',
+  error:   'var(--pos-danger)',
   warning: 'var(--pos-warning)',
-  info: 'var(--pos-primary)',
+  info:    'var(--pos-primary)',
+}
+
+const BG = {
+  success: 'var(--pos-success-bg)',
+  error:   'var(--pos-danger-bg)',
+  warning: 'var(--pos-warning-bg)',
+  info:    'var(--pos-primary-dim)',
+}
+
+interface ToastItemProps {
+  toast: Toast
+  onDismiss: (id: string) => void
+}
+
+function ToastItem({ toast, onDismiss }: ToastItemProps) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const tipo = toast.tipo ?? 'info'
+  const Icon = ICONS[tipo]
+  const color = COLORS[tipo]
+
+  useEffect(() => {
+    const dur = toast.duracion ?? 3200
+    timerRef.current = setTimeout(() => onDismiss(toast.id), dur)
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [toast.id, toast.duracion, onDismiss])
+
+  return (
+    <div
+      className="animate-toast-in flex items-start gap-3 rounded-2xl overflow-hidden"
+      style={{
+        backgroundColor: 'var(--pos-card)',
+        border: '1px solid var(--pos-border)',
+        borderLeft: `3px solid ${color}`,
+        boxShadow: 'var(--pos-shadow-lg)',
+        padding: '12px 14px',
+        minWidth: 280,
+        maxWidth: 360,
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+      }}
+    >
+      {/* Icon */}
+      <div
+        className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center mt-0.5"
+        style={{ backgroundColor: BG[tipo] }}
+      >
+        <Icon size={15} style={{ color }} />
+      </div>
+
+      {/* Message */}
+      <p
+        className="flex-1 text-sm leading-snug pt-1"
+        style={{ color: 'var(--pos-text)', fontFamily: 'Outfit, sans-serif' }}
+      >
+        {toast.mensaje}
+      </p>
+
+      {/* Dismiss */}
+      <button
+        onClick={() => onDismiss(toast.id)}
+        className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mt-0.5 transition-all duration-150 hover:opacity-70"
+        style={{ color: 'var(--pos-text-muted)' }}
+        aria-label="Cerrar notificación"
+      >
+        <X size={13} />
+      </button>
+    </div>
+  )
 }
 
 export default function ToastContainer() {
-  const { state } = usePosContext()
+  const { state, ocultarToast } = usePosContext()
+  const { toasts } = state
 
-  if (state.toasts.length === 0) return null
+  if (toasts.length === 0) return null
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-4 z-[100] flex flex-col gap-2 max-w-sm w-[calc(100%-2rem)]">
-      {state.toasts.map((toast) => {
-        const Icon = iconMap[toast.tipo]
-        return (
-          <div
-            key={toast.id}
-            className="animate-toast-in flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border"
-            style={{
-              backgroundColor: 'var(--pos-card)',
-              borderColor: colorMap[toast.tipo],
-              color: 'var(--pos-text)',
-            }}
-          >
-            <Icon size={18} style={{ color: colorMap[toast.tipo], flexShrink: 0 }} />
-            <span className="text-sm font-medium flex-1">{toast.mensaje}</span>
-          </div>
-        )
-      })}
+    <div
+      className="fixed top-4 right-4 z-[9999] flex flex-col gap-2"
+      role="region"
+      aria-live="polite"
+      aria-label="Notificaciones"
+    >
+      {toasts.map((toast) => (
+        <ToastItem
+          key={toast.id}
+          toast={toast}
+          onDismiss={ocultarToast}
+        />
+      ))}
     </div>
   )
 }
