@@ -1,8 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronDown, ChevronUp, CreditCard, Check, Clock, PackageOpen, Edit3, Trash2 } from 'lucide-react'
-import type { Pedido, ItemPedido, Extra } from '../../lib/types'
+import { useState, useEffect } from 'react'
+import {
+  ChevronDown,
+  ChevronUp,
+  CreditCard,
+  Check,
+  Clock,
+  PackageOpen,
+  Edit3,
+  Trash2,
+  ShoppingBag,
+  AlertCircle,
+} from 'lucide-react'
+import type { Pedido, ItemPedido, Extra, MetodoPago } from '../../lib/types'
 import { formatearPrecio } from '../../lib/utils'
 import { usePosContext } from '../../context/PosContext'
 import ModalPago from './ModalPago'
@@ -10,25 +21,56 @@ import ModalEditarPedido from './ModalEditarPedido'
 
 export default function ListaPedidos() {
   const { state, finalizarPedido, eliminarPedido, actualizarPedido, mostrarToast } = usePosContext()
+
+  // BUG FIX: Sort oldest-first so most urgent orders appear at the top
   const pedidosActivos = state.pedidos
     .filter((p) => p.estado === 'activo')
-    .sort((a, b) => new Date(b.creadoEn).getTime() - new Date(a.creadoEn).getTime())
+    .sort((a, b) => new Date(a.creadoEn).getTime() - new Date(b.creadoEn).getTime())
 
   const [expandido, setExpandido] = useState<string | null>(null)
   const [pagoModal, setPagoModal] = useState<Pedido | null>(null)
   const [editModal, setEditModal] = useState<Pedido | null>(null)
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now())
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // ── Time helpers ──────────────────────────────────────────────
+  const getMinutos = (fecha: Date): number =>
+    Math.floor((now - new Date(fecha).getTime()) / 60000)
 
   const tiempoTranscurrido = (fecha: Date): string => {
-    const mins = Math.floor((Date.now() - new Date(fecha).getTime()) / 60000)
+    const mins = getMinutos(fecha)
     if (mins < 1) return 'ahora'
-    if (mins < 60) return `hace ${mins} min`
-    return `hace ${Math.floor(mins / 60)}h ${mins % 60}m`
+    if (mins < 60) return `hace ${mins}m`
+    return `hace ${Math.floor(mins / 60)}h${mins % 60 > 0 ? ` ${mins % 60}m` : ''}`
   }
 
-  const handlePagar = (pedido: Pedido) => {
+  const tiempoColor = (fecha: Date): string => {
+    const mins = getMinutos(fecha)
+    if (mins < 15) return 'var(--pos-success)'
+    if (mins < 30) return 'var(--pos-warning)'
+    return 'var(--pos-danger)'
+  }
+
+  const tiempoBg = (fecha: Date): string => {
+    const mins = getMinutos(fecha)
+    if (mins < 15) return 'var(--pos-success-bg)'
+    if (mins < 30) return 'var(--pos-warning-bg)'
+    return 'var(--pos-danger-bg)'
+  }
+
+  // ── Handlers ─────────────────────────────────────────────────
+  // BUG FIX: Accept metodo from ModalPago and include in toast
+  const handlePagar = (pedido: Pedido, metodo: MetodoPago) => {
     finalizarPedido(pedido.id)
     setPagoModal(null)
-    mostrarToast({ mensaje: `✅ Pago registrado · Mesa liberada`, tipo: 'success' })
+    const metodoLabel = metodo === 'efectivo' ? 'Efectivo' : 'Yape'
+    mostrarToast({ mensaje: `✅ Pago por ${metodoLabel} registrado · Mesa liberada`, tipo: 'success' })
   }
 
   const handleFinalizar = (pedido: Pedido) => {
@@ -44,144 +86,288 @@ export default function ListaPedidos() {
   }
 
   const handleEliminar = (pedido: Pedido) => {
-    const mesaLabel = pedido.mesaId === 'para_llevar' ? 'Para llevar' : `Mesa ${pedido.mesaId.replace('mesa-', '')}`
+    const mesaLabel =
+      pedido.mesaId === 'para_llevar' ? 'Para llevar' : `Mesa ${pedido.mesaId.replace('mesa-', '')}`
     eliminarPedido(pedido.id)
-    mostrarToast({ mensaje: `🗑️ Pedido #${pedido.numeroPedido} eliminado · ${mesaLabel} liberada`, tipo: 'warning' })
+    mostrarToast({
+      mensaje: `🗑️ Pedido #${pedido.numeroPedido} eliminado · ${mesaLabel} liberada`,
+      tipo: 'warning',
+    })
     setExpandido(null)
   }
 
+  // ── Empty state ───────────────────────────────────────────────
   if (pedidosActivos.length === 0) {
     return (
-      <div className="animate-fade-in flex flex-col items-center justify-center h-full p-8 text-center">
-        <Clock size={48} style={{ color: 'var(--pos-border)' }} />
-        <h3 className="font-heading text-lg font-semibold mt-4" style={{ color: 'var(--pos-text-muted)' }}>Sin pedidos activos</h3>
-        <p className="text-sm" style={{ color: 'var(--pos-text-muted)', opacity: 0.6 }}>Los pedidos confirmados aparecerán aquí</p>
+      <div className="animate-fade-in flex flex-col items-center justify-center h-full p-10 text-center gap-4">
+        <div
+          className="w-20 h-20 rounded-2xl flex items-center justify-center"
+          style={{ backgroundColor: 'var(--pos-surface-2)', border: '1px solid var(--pos-border)' }}
+        >
+          <ShoppingBag size={32} style={{ color: 'var(--pos-text-muted)', opacity: 0.5 }} />
+        </div>
+        <div>
+          <h3
+            className="font-heading text-base font-semibold mb-1"
+            style={{ color: 'var(--pos-text-muted)' }}
+          >
+            Sin pedidos activos
+          </h3>
+          <p className="text-sm" style={{ color: 'var(--pos-text-disabled)' }}>
+            Los pedidos confirmados aparecerán aquí en orden de llegada
+          </p>
+        </div>
       </div>
     )
   }
 
+  // ── Main render ───────────────────────────────────────────────
   return (
-    <div className="animate-fade-in p-4 space-y-3 pb-24 sm:pb-4">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--pos-text)' }}>
+    <div className="animate-fade-in p-4 space-y-2.5 pb-24 sm:pb-4">
+      {/* Section header */}
+      <div className="flex items-center justify-between mb-3 px-1">
+        <h2 className="font-heading text-base font-bold" style={{ color: 'var(--pos-text)' }}>
           Pedidos activos
         </h2>
-        <span className="text-xs font-bold px-2 py-1 rounded-lg text-white" style={{ backgroundColor: 'var(--pos-primary)' }}>
-          {pedidosActivos.length}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-medium" style={{ color: 'var(--pos-text-muted)' }}>
+            más antiguos primero
+          </span>
+          <span
+            className="min-w-[24px] h-6 px-2 rounded-lg text-xs font-bold text-white flex items-center justify-center"
+            style={{ backgroundColor: 'var(--pos-primary)' }}
+          >
+            {pedidosActivos.length}
+          </span>
+        </div>
       </div>
 
-      {pedidosActivos.map((pedido) => {
+      {pedidosActivos.map((pedido, index) => {
         const isExpanded = expandido === pedido.id
         const mainNum = pedido.mesaId.replace('mesa-', '')
-        const mergedNums = pedido.mesasUnidas && pedido.mesasUnidas.length > 0
-          ? pedido.mesasUnidas.map((id) => id.replace('mesa-', '')).join('-')
-          : ''
-        const mesaNum = pedido.mesaId === 'para_llevar'
-          ? 'Para llevar'
-          : `Mesa ${mainNum}${mergedNums ? '-' + mergedNums : ''}`
-        const mesaShort = pedido.mesaId === 'para_llevar' ? null : `M${mainNum}${mergedNums ? '-' + mergedNums : ''}`
+        const mergedNums =
+          pedido.mesasUnidas && pedido.mesasUnidas.length > 0
+            ? pedido.mesasUnidas.map((id) => id.replace('mesa-', '')).join('-')
+            : ''
+        const mesaNum =
+          pedido.mesaId === 'para_llevar'
+            ? 'Para llevar'
+            : `Mesa ${mainNum}${mergedNums ? '-' + mergedNums : ''}`
+        const mesaShort =
+          pedido.mesaId === 'para_llevar' ? null : `M${mainNum}${mergedNums ? '-' + mergedNums : ''}`
         const esPensionista = pedido.tipo !== 'regular'
+        const urgencyColor = tiempoColor(pedido.creadoEn)
+        const urgencyBg = tiempoBg(pedido.creadoEn)
 
         return (
-          <div key={pedido.id} className="rounded-2xl overflow-hidden transition-all duration-200" style={{ backgroundColor: 'var(--pos-card)', border: '1px solid var(--pos-border)' }}>
-            {/* Header — always visible */}
-            <button onClick={() => setExpandido(isExpanded ? null : pedido.id)} className="w-full p-4 flex items-center justify-between text-left">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--pos-warning-bg)' }}>
-                  {pedido.mesaId === 'para_llevar' ? (
-                    <PackageOpen size={18} style={{ color: 'var(--pos-warning)' }} />
+          <div
+            key={pedido.id}
+            className="rounded-[20px] overflow-hidden transition-all duration-200"
+            style={{
+              backgroundColor: 'var(--pos-card)',
+              border: '1px solid var(--pos-border)',
+              boxShadow: isExpanded ? 'var(--pos-shadow-md)' : 'var(--pos-shadow-sm)',
+            }}
+          >
+            {/* ── Card header — always visible ── */}
+            <button
+              onClick={() => setExpandido(isExpanded ? null : pedido.id)}
+              className="w-full p-4 flex items-center gap-3 text-left transition-colors hover:bg-white/[0.02] active:scale-[0.995]"
+            >
+              {/* Mesa icon / number */}
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: urgencyBg, border: `1.5px solid ${urgencyColor}30` }}
+              >
+                {pedido.mesaId === 'para_llevar' ? (
+                  <PackageOpen size={18} style={{ color: urgencyColor }} />
+                ) : (
+                  <span
+                    className="font-heading text-[9px] font-bold leading-tight text-center"
+                    style={{ color: urgencyColor }}
+                  >
+                    {mesaShort}
+                  </span>
+                )}
+              </div>
+
+              {/* Main info */}
+              <div className="flex-1 min-w-0">
+                {/* Row 1: mesa name + order number */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className="text-sm font-semibold leading-tight"
+                    style={{ color: 'var(--pos-text)' }}
+                  >
+                    {mesaNum}
+                  </span>
+                  <span
+                    className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                    style={{
+                      backgroundColor: 'var(--pos-surface-2)',
+                      color: 'var(--pos-text-muted)',
+                    }}
+                  >
+                    #{pedido.numeroPedido}
+                  </span>
+                </div>
+                {/* Row 2: time elapsed + customer type */}
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                    style={{ backgroundColor: urgencyBg, color: urgencyColor }}
+                  >
+                    <Clock size={9} />
+                    {tiempoTranscurrido(pedido.creadoEn)}
+                  </span>
+                  {esPensionista ? (
+                    <span
+                      className="text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+                      style={{ backgroundColor: 'rgba(167,139,250,0.12)', color: '#A78BFA' }}
+                    >
+                      Pensionista
+                    </span>
                   ) : (
-                    <span className="text-[9px] font-bold leading-tight text-center" style={{ color: 'var(--pos-warning)' }}>
-                      {mesaShort}
+                    <span
+                      className="text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+                      style={{
+                        backgroundColor: 'var(--pos-surface-2)',
+                        color: 'var(--pos-text-muted)',
+                      }}
+                    >
+                      Regular
                     </span>
                   )}
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm font-semibold" style={{ color: 'var(--pos-text)' }}>{mesaNum}</h3>
-                    <span className="text-xs" style={{ color: 'var(--pos-text-muted)' }}>Pedido #{pedido.numeroPedido}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ backgroundColor: 'var(--pos-danger-bg)', color: 'var(--pos-danger)' }}>
-                      🔴 Ocupado
-                    </span>
-                    <span className="text-[10px]" style={{ color: 'var(--pos-text-muted)' }}>{tiempoTranscurrido(pedido.creadoEn)}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-md" style={{ backgroundColor: 'rgba(212, 149, 106, 0.12)', color: 'var(--pos-secondary)' }}>
-                      {esPensionista ? '🎓 Pensionista' : '👤 Regular'}
-                    </span>
-                  </div>
-                </div>
               </div>
-              <div className="flex items-center gap-2 ml-2 shrink-0">
-                <span className="font-heading text-sm font-bold" style={{ color: 'var(--pos-primary)' }}>{formatearPrecio(pedido.total)}</span>
-                {isExpanded ? <ChevronUp size={16} style={{ color: 'var(--pos-text-muted)' }} /> : <ChevronDown size={16} style={{ color: 'var(--pos-text-muted)' }} />}
+
+              {/* Price + chevron */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span
+                  className="font-heading text-sm font-bold text-tabular"
+                  style={{ color: 'var(--pos-primary)' }}
+                >
+                  {formatearPrecio(pedido.total)}
+                </span>
+                <div
+                  className="transition-transform duration-200"
+                  style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                >
+                  <ChevronDown size={16} style={{ color: 'var(--pos-text-muted)' }} />
+                </div>
               </div>
             </button>
 
-            {/* Expanded detail */}
+            {/* ── Expanded detail ── */}
             {isExpanded && (
-              <div className="px-4 pb-4 animate-fade-in" style={{ borderTop: '1px solid var(--pos-border)' }}>
+              <div
+                className="px-4 pb-4 animate-fade-in"
+                style={{ borderTop: '1px solid var(--pos-border)' }}
+              >
                 <div className="pt-3 space-y-1.5">
                   {/* ── Pensionista grouped view ── */}
                   {esPensionista && pedido.pensionistas && pedido.pensionistas.length > 0 ? (
                     <div className="space-y-3">
-                      <p className="text-xs font-medium" style={{ color: 'var(--pos-text-muted)' }}>
-                        🟣 Pensionistas ({pedido.pensionistas.length})
+                      <p
+                        className="text-[10px] uppercase tracking-wider font-semibold"
+                        style={{ color: 'var(--pos-text-muted)' }}
+                      >
+                        Pensionistas ({pedido.pensionistas.length})
                       </p>
                       {pedido.pensionistas.map((pens) => {
-                        const pensTotal = pens.itemsPedido.reduce((s, i) => s + i.producto.precioPension * i.cantidad, 0)
-                          + (pens.extras?.reduce((s, e) => s + e.monto, 0) || 0)
+                        const pensTotal =
+                          pens.itemsPedido.reduce(
+                            (s, i) => s + i.producto.precioPension * i.cantidad,
+                            0
+                          ) + (pens.extras?.reduce((s, e) => s + e.monto, 0) || 0)
                         return (
                           <div
                             key={pens.id}
-                            className="rounded-lg overflow-hidden"
+                            className="rounded-xl overflow-hidden"
                             style={{
                               backgroundColor: 'var(--pos-bg)',
-                              borderLeft: '3px solid var(--pos-primary)',
                               border: '1px solid var(--pos-border)',
-                              borderLeftWidth: '3px',
-                              borderLeftColor: 'var(--pos-primary)',
+                              borderLeft: '3px solid #A78BFA',
                             }}
                           >
                             {/* Pensionista header */}
-                            <div className="flex items-center justify-between px-3 py-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: 'var(--pos-primary)' }}>
-                                  {pens.nombre.charAt(0)}
+                            <div className="flex items-center justify-between px-3 py-2.5">
+                              <div className="flex items-center gap-2.5">
+                                {/* Initials avatar */}
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                                  style={{ backgroundColor: '#A78BFA' }}
+                                >
+                                  {pens.nombre
+                                    .split(' ')
+                                    .slice(0, 2)
+                                    .map((w) => w.charAt(0))
+                                    .join('')
+                                    .toUpperCase()}
                                 </div>
                                 <div>
-                                  <p className="font-heading text-xs font-bold" style={{ color: 'var(--pos-text)' }}>
+                                  <p
+                                    className="font-heading text-xs font-bold"
+                                    style={{ color: 'var(--pos-text)' }}
+                                  >
                                     {pens.nombre}
                                   </p>
-                                  <p className="text-[10px] capitalize" style={{ color: 'var(--pos-text-muted)' }}>
+                                  <p
+                                    className="text-[10px] capitalize"
+                                    style={{ color: 'var(--pos-text-muted)' }}
+                                  >
                                     {pens.tipo} · {pens.codigo}
                                   </p>
                                 </div>
                               </div>
-                              <span className="text-xs font-bold" style={{ color: 'var(--pos-primary)' }}>
+                              <span
+                                className="text-xs font-bold text-tabular"
+                                style={{ color: '#A78BFA' }}
+                              >
                                 {formatearPrecio(pensTotal)}
                               </span>
                             </div>
                             {/* Items */}
-                            <div className="px-3 pb-2 space-y-0.5">
+                            <div className="px-3 pb-2.5 space-y-0.5">
                               {pens.itemsPedido.map((item) => (
                                 <div key={item.id} className="flex justify-between text-xs">
                                   <span style={{ color: 'var(--pos-text)' }}>
                                     {item.cantidad}× {item.producto.nombre}
-                                    {item.paraLlevar && ' 🥡'}
+                                    {item.paraLlevar && (
+                                      <span
+                                        className="ml-1 text-[9px] px-1 py-0.5 rounded font-medium"
+                                        style={{
+                                          backgroundColor: 'var(--pos-warning-bg)',
+                                          color: 'var(--pos-warning)',
+                                        }}
+                                      >
+                                        llevar
+                                      </span>
+                                    )}
                                   </span>
-                                  <span style={{ color: 'var(--pos-text-muted)' }}>
+                                  <span
+                                    className="text-tabular"
+                                    style={{ color: 'var(--pos-text-muted)' }}
+                                  >
                                     {formatearPrecio(item.producto.precioPension * item.cantidad)}
                                   </span>
                                 </div>
                               ))}
-                              {pens.extras && pens.extras.length > 0 && pens.extras.map((e) => (
-                                <div key={e.id} className="flex justify-between text-xs">
-                                  <span style={{ color: 'var(--pos-text-muted)' }}>+ {e.descripcion}</span>
-                                  <span style={{ color: 'var(--pos-warning)' }}>{formatearPrecio(e.monto)}</span>
-                                </div>
-                              ))}
+                              {pens.extras &&
+                                pens.extras.length > 0 &&
+                                pens.extras.map((e) => (
+                                  <div key={e.id} className="flex justify-between text-xs">
+                                    <span style={{ color: 'var(--pos-text-muted)' }}>
+                                      + {e.descripcion}
+                                    </span>
+                                    <span
+                                      className="text-tabular"
+                                      style={{ color: 'var(--pos-warning)' }}
+                                    >
+                                      {formatearPrecio(e.monto)}
+                                    </span>
+                                  </div>
+                                ))}
                             </div>
                           </div>
                         )
@@ -191,27 +377,70 @@ export default function ListaPedidos() {
                     /* ── Regular flat item list ── */
                     <>
                       {pedido.items.map((item) => (
-                        <div key={item.id} className="flex justify-between items-center py-1 text-sm">
+                        <div
+                          key={item.id}
+                          className="flex justify-between items-center py-1 text-sm"
+                        >
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold w-5 h-5 rounded flex items-center justify-center" style={{ backgroundColor: 'rgba(192, 113, 74, 0.12)', color: 'var(--pos-primary)' }}>
+                            <span
+                              className="text-[11px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0"
+                              style={{
+                                backgroundColor: 'rgba(6,182,212,0.1)',
+                                color: 'var(--pos-primary)',
+                              }}
+                            >
                               {item.cantidad}
                             </span>
-                            <span style={{ color: 'var(--pos-text)' }}>{item.producto.nombre}</span>
-                            {item.paraLlevar && <span className="text-[10px] px-1 rounded" style={{ backgroundColor: 'var(--pos-warning-bg)', color: 'var(--pos-warning)' }}>🥡</span>}
+                            <span style={{ color: 'var(--pos-text)' }}>
+                              {item.producto.nombre}
+                            </span>
+                            {item.paraLlevar && (
+                              <span
+                                className="text-[9px] px-1 py-0.5 rounded font-medium"
+                                style={{
+                                  backgroundColor: 'var(--pos-warning-bg)',
+                                  color: 'var(--pos-warning)',
+                                }}
+                              >
+                                llevar
+                              </span>
+                            )}
                           </div>
-                          <span style={{ color: 'var(--pos-text-muted)' }}>
-                            {formatearPrecio((esPensionista ? item.producto.precioPension : item.producto.precioRegular) * item.cantidad)}
+                          <span
+                            className="text-tabular text-xs"
+                            style={{ color: 'var(--pos-text-muted)' }}
+                          >
+                            {formatearPrecio(
+                              (esPensionista
+                                ? item.producto.precioPension
+                                : item.producto.precioRegular) * item.cantidad
+                            )}
                           </span>
                         </div>
                       ))}
 
                       {pedido.extras.length > 0 && (
-                        <div className="pt-1" style={{ borderTop: '1px dashed var(--pos-border)' }}>
-                          <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--pos-text-muted)' }}>Extras</p>
+                        <div
+                          className="pt-1.5 mt-0.5"
+                          style={{ borderTop: '1px dashed var(--pos-divider)' }}
+                        >
+                          <p
+                            className="text-[9px] uppercase tracking-widest mb-1.5 font-semibold"
+                            style={{ color: 'var(--pos-text-muted)' }}
+                          >
+                            Extras
+                          </p>
                           {pedido.extras.map((e) => (
                             <div key={e.id} className="flex justify-between text-xs py-0.5">
-                              <span style={{ color: 'var(--pos-text-muted)' }}>{e.descripcion}</span>
-                              <span style={{ color: 'var(--pos-warning)' }}>{formatearPrecio(e.monto)}</span>
+                              <span style={{ color: 'var(--pos-text-muted)' }}>
+                                {e.descripcion}
+                              </span>
+                              <span
+                                className="text-tabular"
+                                style={{ color: 'var(--pos-warning)' }}
+                              >
+                                {formatearPrecio(e.monto)}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -219,47 +448,61 @@ export default function ListaPedidos() {
                     </>
                   )}
 
-                  <div className="flex justify-between pt-2 text-sm font-bold" style={{ borderTop: '1px solid var(--pos-border)' }}>
-                    <span style={{ color: 'var(--pos-text)' }}>Total</span>
-                    <span style={{ color: 'var(--pos-primary)' }}>{formatearPrecio(pedido.total)}</span>
+                  {/* Total row */}
+                  <div
+                    className="flex justify-between pt-2.5 mt-1 text-sm font-bold"
+                    style={{ borderTop: '1px solid var(--pos-border)' }}
+                  >
+                    <span style={{ color: 'var(--pos-text-muted)' }}>Total</span>
+                    <span className="text-tabular" style={{ color: 'var(--pos-primary)' }}>
+                      {formatearPrecio(pedido.total)}
+                    </span>
                   </div>
                 </div>
 
-                {/* Action buttons — Edit + Pay/Finalize */}
+                {/* ── Action buttons: Edit + Pay/Finalize ── */}
                 <div className="flex gap-2 mt-4">
                   <button
                     onClick={() => setEditModal(pedido)}
-                    className="h-12 px-5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                    style={{ border: '2px solid var(--pos-primary)', color: 'var(--pos-primary)' }}
+                    className="touch-target px-5 rounded-xl font-heading font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] active:translate-y-px"
+                    style={{
+                      border: '1.5px solid var(--pos-border-2)',
+                      color: 'var(--pos-text-2)',
+                      backgroundColor: 'var(--pos-surface-2)',
+                    }}
                   >
-                    <Edit3 size={16} /> Editar
+                    <Edit3 size={15} />
+                    Editar
                   </button>
                   {esPensionista ? (
                     <button
                       onClick={() => handleFinalizar(pedido)}
-                      className="flex-1 h-12 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                      className="flex-1 touch-target rounded-xl text-white font-heading font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] active:translate-y-px"
                       style={{ backgroundColor: 'var(--pos-success)' }}
                     >
-                      <Check size={16} /> Finalizar pedido
+                      <Check size={16} />
+                      Finalizar pedido
                     </button>
                   ) : (
                     <button
                       onClick={() => setPagoModal(pedido)}
-                      className="flex-1 h-12 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                      className="flex-1 touch-target rounded-xl text-white font-heading font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] active:translate-y-px"
                       style={{ backgroundColor: 'var(--pos-success)' }}
                     >
-                      <CreditCard size={16} /> Pagar
+                      <CreditCard size={16} />
+                      Pagar
                     </button>
                   )}
                 </div>
 
-                {/* Danger zone — delete */}
+                {/* ── Danger: delete ── */}
                 <button
                   onClick={() => handleEliminar(pedido)}
-                  className="w-full h-10 mt-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
-                  style={{ border: '1px solid var(--pos-danger)', color: 'var(--pos-danger)' }}
+                  className="w-full h-9 mt-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] hover:bg-red-500/5"
+                  style={{ color: 'var(--pos-danger)', border: '1px solid var(--pos-danger-border)' }}
                 >
-                  <Trash2 size={13} /> Eliminar pedido
+                  <Trash2 size={12} />
+                  Eliminar pedido
                 </button>
               </div>
             )}
@@ -267,12 +510,13 @@ export default function ListaPedidos() {
         )
       })}
 
+      {/* ── Modals ── */}
       {pagoModal && (
         <ModalPago
           pedido={pagoModal}
           open={!!pagoModal}
           onClose={() => setPagoModal(null)}
-          onPagado={() => handlePagar(pagoModal)}
+          onPagado={(metodo) => handlePagar(pagoModal, metodo)}
         />
       )}
 

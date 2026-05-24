@@ -55,8 +55,11 @@ export default function ModalUnirMesas({ mesaPrincipal, mesasDisponibles, open, 
       <div className="absolute inset-0" style={{ backgroundColor: 'var(--pos-overlay)' }} />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md rounded-t-2xl sm:rounded-2xl animate-slide-up shadow-2xl"
-        style={{ backgroundColor: 'var(--pos-card)' }}
+        className="relative w-[calc(100%-1.5rem)] sm:w-full sm:max-w-md animate-slide-up shadow-2xl mx-auto mb-4 sm:mb-0"
+        style={{
+          backgroundColor: 'var(--pos-card)',
+          borderRadius: 'var(--pos-radius-2xl)',
+        }}
       >
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--pos-border)' }}>
           <div className="flex items-center gap-2">
