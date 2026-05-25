@@ -59,8 +59,10 @@ function formatPrice(precio: string | number) {
 
 function getImageUrl(imagen?: string): string | null {
   if (!imagen) return null;
-  if (imagen.startsWith("http")) return imagen;
   const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+  if (imagen.startsWith("http")) {
+    return imagen.replace("http://localhost:4000", baseUrl);
+  }
   return `${baseUrl}${imagen}`;
 }
 
