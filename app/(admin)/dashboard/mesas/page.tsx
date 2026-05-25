@@ -128,7 +128,7 @@ export default function Mesas() {
 
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2 bg-[#06b6d4] hover:bg-[#c05520] text-white w-full sm:w-auto">
+                <Button className="gap-2 bg-[#06b6d4] hover:bg-primary/90 text-white w-full sm:w-auto">
                   <Plus size={15} /> Nueva Mesa
                 </Button>
               </DialogTrigger>
@@ -138,7 +138,7 @@ export default function Mesas() {
                 </DialogHeader>
                 <div className="space-y-4 pt-1">
                   <div className="space-y-1.5">
-                    <Label className="text-sm font-semibold text-gray-700">Número de mesa</Label>
+                    <Label className="text-sm font-semibold text-foreground">Número de mesa</Label>
                     <Input
                       type="number"
                       value={newNumber}
@@ -147,7 +147,7 @@ export default function Mesas() {
                       className="focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
                     />
                   </div>
-                  <Button onClick={handleAdd} className="w-full bg-[#06b6d4] hover:bg-[#c05520] text-white">
+                  <Button onClick={handleAdd} className="w-full bg-[#06b6d4] hover:bg-primary/90 text-white">
                     Agregar mesa
                   </Button>
                 </div>
@@ -205,9 +205,9 @@ export default function Mesas() {
                       key={cellKey}
                       className={`aspect-square rounded-2xl border-2 border-dashed flex items-center justify-center transition-all
                         ${table
-                          ? "border-[#06b6d4]/30 bg-[#fdf0ea]/60"
+                          ? "border-[#06b6d4]/30 bg-primary/10/60"
                           : isOver
-                          ? "border-[#06b6d4] bg-[#fdf0ea]"
+                          ? "border-[#06b6d4] bg-primary/10"
                           : "border-border hover:border-[#06b6d4]/30"
                         }`}
                       onDragOver={(e) => { e.preventDefault(); setDragOver(cellKey); }}

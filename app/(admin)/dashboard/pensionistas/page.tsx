@@ -59,7 +59,7 @@ function Initials({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
       : "w-8 h-8 text-xs";
   return (
     <span
-      className={`${cls} rounded-full bg-[#fdf0ea] text-[#06b6d4] font-bold flex items-center justify-center flex-shrink-0 uppercase`}
+      className={`${cls} rounded-full bg-primary/10 text-[#06b6d4] font-bold flex items-center justify-center flex-shrink-0 uppercase`}
     >
       {initials}
     </span>
@@ -175,7 +175,7 @@ export default function PensionistasPage() {
 
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2 bg-[#06b6d4] hover:bg-[#c05520] text-white w-full sm:w-auto">
+                <Button className="gap-2 bg-[#06b6d4] hover:bg-primary/90 text-white w-full sm:w-auto">
                   <Plus size={15} /> Nuevo pensionista
                 </Button>
               </DialogTrigger>
@@ -185,7 +185,7 @@ export default function PensionistasPage() {
                 </DialogHeader>
                 <div className="space-y-4 pt-1">
                   <div className="space-y-1.5">
-                    <Label className="text-sm font-semibold text-gray-700">Nombre completo</Label>
+                    <Label className="text-sm font-semibold text-foreground">Nombre completo</Label>
                     <Input
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
@@ -194,7 +194,7 @@ export default function PensionistasPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-sm font-semibold text-gray-700">DNI</Label>
+                    <Label className="text-sm font-semibold text-foreground">DNI</Label>
                     <Input
                       value={newDni}
                       onChange={(e) => setNewDni(e.target.value)}
@@ -203,7 +203,7 @@ export default function PensionistasPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-sm font-semibold text-gray-700">Tipo de Plan</Label>
+                    <Label className="text-sm font-semibold text-foreground">Tipo de Plan</Label>
                     <select
                       value={newPlan}
                       onChange={(e) => setNewPlan(e.target.value)}
@@ -213,7 +213,7 @@ export default function PensionistasPage() {
                       <option value="saldo">Por Saldo (Dinero)</option>
                     </select>
                   </div>
-                  <Button onClick={handleAdd} className="w-full bg-[#06b6d4] hover:bg-[#c05520] text-white">
+                  <Button onClick={handleAdd} className="w-full bg-[#06b6d4] hover:bg-primary/90 text-white">
                     Agregar pensionista
                   </Button>
                 </div>
@@ -271,7 +271,7 @@ export default function PensionistasPage() {
                 <div className="flex border-t border-border">
                   <button
                     onClick={() => openRecharge(p.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-[#06b6d4] hover:bg-[#fdf0ea] transition-colors border-r border-border"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-[#06b6d4] hover:bg-primary/10 transition-colors border-r border-border"
                   >
                     <RefreshCw size={13} /> Recargar
                   </button>
@@ -356,7 +356,7 @@ export default function PensionistasPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1.5 h-8 text-xs border-[#06b6d4] text-[#06b6d4] hover:bg-[#fdf0ea] hover:text-[#06b6d4]"
+                          className="gap-1.5 h-8 text-xs border-[#06b6d4] text-[#06b6d4] hover:bg-primary/10 hover:text-[#06b6d4]"
                           onClick={() => openRecharge(p.id)}
                         >
                           <RefreshCw size={12} /> Recargar
@@ -364,7 +364,7 @@ export default function PensionistasPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-gray-700 hover:bg-muted"
+                          className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
                           onClick={() => toast.info("Historial próximamente 👀")}
                         >
                           <History size={12} /> Historial
@@ -387,7 +387,7 @@ export default function PensionistasPage() {
             <DialogTitle className="text-[#06b6d4]">Recargar Saldo</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-1">
-            <div className="flex items-center gap-3 bg-[#fdf0ea] border border-orange-200 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-3 bg-primary/10 border border-primary/40 rounded-xl px-4 py-3">
                <Initials name={selectedUser?.fullName ?? "?"} size="md" />
               <div>
                 <p className="text-xs text-muted-foreground">Pensionista</p>
@@ -406,7 +406,7 @@ export default function PensionistasPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-gray-700">Cantidad a recargar</Label>
+              <Label className="text-sm font-semibold text-foreground">Cantidad a recargar</Label>
               <Input
                 type="number"
                 value={rechargeAmount}
@@ -418,7 +418,7 @@ export default function PensionistasPage() {
 
             <Button
               onClick={handleRecharge}
-              className="w-full bg-[#06b6d4] hover:bg-[#c05520] text-white gap-2"
+              className="w-full bg-[#06b6d4] hover:bg-primary/90 text-white gap-2"
             >
               <RefreshCw size={14} /> Confirmar recarga
             </Button>
