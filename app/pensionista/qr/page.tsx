@@ -163,7 +163,7 @@ export default function QRIdentityPage() {
                <div className="relative">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-0.5 shadow-xl">
                      <div className="w-full h-full rounded-[14px] overflow-hidden bg-slate-800">
-                        <Image src={user.avatar} alt="Avatar" width={56} height={56} className="object-cover" />
+                        <Image src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150"} alt="Avatar" width={56} height={56} className="object-cover" />
                      </div>
                   </div>
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center">

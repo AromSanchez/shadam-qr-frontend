@@ -1,41 +1,49 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/mock-db";
-import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const { email, password } = await request.json();
 
-    // Mock validation: any password works for known emails
-    const user = db.users.find(u => u.email === email);
+    // Si son las credenciales de administrador correctas, simulamos el comportamiento del backend real
+    if (email === "admin@system.com" && password === "admin123") {
+      const response = NextResponse.json({
+        first_login: false,
+        role: "admin",
+      });
 
-    if (!user) {
-      return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
+      // Seteamos las cookies tal como lo haría el backend real para que el middleware las valide
+      // Usamos un JWT mock simulado que contiene el rol de admin codificado en base64
+      // Payload codificado: {"sub":1,"role":"admin"} -> eyJzdWIiOjEsInJvbGUiOiJhZG1pbiJ9
+      const mockAccessToken = "header.eyJzdWIiOjEsInJvbGUiOiJhZG1pbiJ9.signature";
+      
+      response.cookies.set("access_token", mockAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 15 * 60, // 15 minutos
+        path: "/",
+      });
+
+      response.cookies.set("refresh_token", "mock_refresh_token_value", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60, // 7 días
+        path: "/",
+      });
+
+      return response;
     }
 
-    if (user.status !== "active") {
-      return NextResponse.json({ error: "Usuario inactivo" }, { status: 403 });
-    }
-
-    // Set a mock session cookie
-    const cookieStore = await cookies();
-    cookieStore.set("session_id", user.id, { 
-      httpOnly: true, 
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7 // 1 week
-    });
-
-    return NextResponse.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
-    });
-
+    return NextResponse.json(
+      { message: "Credenciales inválidas" },
+      { status: 401 }
+    );
   } catch (error) {
-    return NextResponse.json({ error: "Error en el servidor" }, { status: 500 });
+    console.error("[Mock Auth] Login error:", error);
+    return NextResponse.json(
+      { message: "Error interno del servidor mock" },
+      { status: 500 }
+    );
   }
 }

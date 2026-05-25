@@ -56,11 +56,11 @@ export function HeaderProfile() {
                 className="flex items-center gap-2 bg-white dark:bg-white/10 backdrop-blur-xl border border-slate-200 dark:border-white/20 hover:bg-slate-50 dark:hover:bg-white/20 transition-all p-1 pr-3 rounded-full shadow-sm dark:shadow-2xl"
               >
                 <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-slate-200 dark:border-white/30 shrink-0 shadow-inner">
-                  <Image src={user.avatar} alt={user.name} fill sizes="32px" className="object-cover" />
+                  <Image src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150"} alt={user.name || "Usuario"} fill sizes="32px" className="object-cover" />
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-800 dark:text-white text-xs font-bold whitespace-nowrap max-w-[90px] truncate font-display">
-                    {user.name.split(' ')[0]}
+                    {(user.name || "Usuario").split(' ')[0]}
                   </span>
                   <ChevronDown className={`w-3 h-3 text-slate-500 dark:text-white/60 transition-transform duration-300 ${showDropdown ? 'rotate-180' : ''}`} />
                 </div>
