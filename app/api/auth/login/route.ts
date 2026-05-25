@@ -1,49 +1,40 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:4000";
+
+export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
 
-    // Si son las credenciales de administrador correctas, simulamos el comportamiento del backend real
-    if (email === "admin@system.com" && password === "admin123") {
-      const response = NextResponse.json({
-        first_login: false,
-        role: "admin",
-      });
+    const backendRes = await fetch(`${BACKEND_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
-      // Seteamos las cookies tal como lo haría el backend real para que el middleware las valide
-      // Usamos un JWT mock simulado que contiene el rol de admin codificado en base64
-      // Payload codificado: {"sub":1,"role":"admin"} -> eyJzdWIiOjEsInJvbGUiOiJhZG1pbiJ9
-      const mockAccessToken = "header.eyJzdWIiOjEsInJvbGUiOiJhZG1pbiJ9.signature";
-      
-      response.cookies.set("access_token", mockAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 15 * 60, // 15 minutos
-        path: "/",
-      });
+    const data = await backendRes.json();
 
-      response.cookies.set("refresh_token", "mock_refresh_token_value", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60, // 7 días
-        path: "/",
-      });
-
-      return response;
+    if (!backendRes.ok) {
+      return NextResponse.json(data, { status: backendRes.status });
     }
 
-    return NextResponse.json(
-      { message: "Credenciales inválidas" },
-      { status: 401 }
-    );
+    const response = NextResponse.json(data, { status: backendRes.status });
+    const setCookies = backendRes.headers.getSetCookie();
+
+    if (setCookies) {
+      for (const cookie of setCookies) {
+        response.headers.append("Set-Cookie", cookie);
+      }
+    }
+
+    return response;
   } catch (error) {
-    console.error("[Mock Auth] Login error:", error);
+    console.error("[Proxy Auth] Login error:", error);
     return NextResponse.json(
-      { message: "Error interno del servidor mock" },
-      { status: 500 }
+      { message: "Error de conexión con el servidor" },
+      { status: 502 }
     );
   }
 }
