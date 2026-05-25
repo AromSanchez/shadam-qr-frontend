@@ -60,7 +60,8 @@ function formatPrice(precio: string | number) {
 function getImageUrl(imagen?: string): string | null {
   if (!imagen) return null;
   if (imagen.startsWith("http")) return imagen;
-  return `http://localhost:4000${imagen}`;
+  const baseUrl = process.env.BACKEND_URL || "http://localhost:4000";
+  return `${baseUrl}${imagen}`;
 }
 
 // ─── Skeleton Card ────────────────────────────────────
