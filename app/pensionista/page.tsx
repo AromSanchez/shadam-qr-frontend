@@ -89,6 +89,7 @@ export default function PensionistPortalPage() {
       
         // Simulate login without backend validation
         const dummyPensionist = {
+          id: "demo",
           fullName: "Demo Pensionista",
           code: inputCode.trim().toUpperCase(),
           dni: "00000000",

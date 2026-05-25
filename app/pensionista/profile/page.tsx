@@ -81,7 +81,7 @@ export default function ProfilePage() {
           <div className="relative mb-4">
             <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-cyan-600 p-[3px] shadow-xl shadow-primary/20">
               <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden">
-                <img src={user.avatar} className="w-full h-full object-cover" alt="Profile avatar" />
+                <img src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150"} className="w-full h-full object-cover" alt="Profile avatar" />
               </div>
             </div>
             <Badge

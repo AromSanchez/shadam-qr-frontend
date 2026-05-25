@@ -321,7 +321,7 @@ export default function ConsumoPage() {
                   <div className="relative mb-6">
                      <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-tr from-primary to-cyan-600 p-0.5 shadow-2xl">
                         <div className="w-full h-full rounded-[30px] overflow-hidden bg-slate-900">
-                           <img src={user.avatar} className="w-full h-full object-cover" alt="" />
+                           <img src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150"} className="w-full h-full object-cover" alt="" />
                         </div>
                      </div>
                      <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-white shadow-xl rounded-2xl flex items-center justify-center border-4 border-white">

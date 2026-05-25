@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Lock, User as UserIcon, ArrowRight } from "lucide-react";
+import { X, Lock, User as UserIcon, ArrowRight, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
+import { useRouter } from "next/navigation";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -12,20 +13,34 @@ interface LoginModalProps {
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const { login } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate network request
-    setTimeout(() => {
-      login(email);
+    setError(null);
+
+    try {
+      const result = await login({ email, password });
+
+      if (result && !result.success) {
+        setError(result.message || "Credenciales inválidas");
+        setIsLoading(false);
+        return;
+      }
+
+      // Login exitoso → redirect a recepción
       setIsLoading(false);
       onClose();
-    }, 1200);
+      router.push("/recepcion");
+    } catch {
+      setError("Error de conexión con el servidor");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -71,6 +86,23 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Ingresa para ver tu cuenta</p>
               </div>
 
+              {/* Error message */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mb-4 overflow-hidden"
+                  >
+                    <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 px-4 py-3 rounded-2xl text-xs font-semibold">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -80,7 +112,10 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     type="text"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (error) setError(null);
+                    }}
                     placeholder="Correo electrónico"
                     className="w-full h-12 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-slate-900 dark:text-white"
                   />
@@ -94,7 +129,10 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     type="password"
                     required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (error) setError(null);
+                    }}
                     placeholder="Contraseña"
                     className="w-full h-12 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-slate-900 dark:text-white"
                   />
