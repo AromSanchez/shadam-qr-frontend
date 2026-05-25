@@ -69,9 +69,9 @@ export default function VentasPage() {
       case "pendiente": return "bg-amber-50 text-amber-600 border-amber-100";
       case "preparando": return "bg-blue-50 text-blue-600 border-blue-100";
       case "listo": return "bg-emerald-50 text-emerald-600 border-emerald-100";
-      case "entregado": return "bg-slate-50 text-slate-600 border-slate-100";
+      case "entregado": return "bg-slate-50 text-secondary-foreground border-slate-100";
       case "cancelado": return "bg-red-50 text-red-600 border-red-100";
-      default: return "bg-gray-50 text-gray-600 border-gray-100";
+      default: return "bg-muted/50 text-gray-600 border-border";
     }
   };
 
@@ -85,16 +85,16 @@ export default function VentasPage() {
           <div>
             <div className="flex items-center gap-2.5 mb-0.5">
               <DollarSign className="text-[#06b6d4]" size={22} />
-              <h1 className="text-2xl font-bold text-gray-900">Ventas y Pedidos</h1>
+              <h1 className="text-2xl font-bold text-foreground">Ventas y Pedidos</h1>
             </div>
-            <p className="text-sm text-gray-500 pl-8">Registro histórico de todas las transacciones</p>
+            <p className="text-sm text-muted-foreground pl-8">Registro histórico de todas las transacciones</p>
           </div>
         </div>
 
         {/* SEARCH & TOTAL */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="relative w-full sm:max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
             <Input 
               placeholder="Buscar por ID o método..." 
               className="pl-10"
@@ -112,10 +112,10 @@ export default function VentasPage() {
         </div>
 
         {/* TABLE */}
-        <div className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
           <Table>
             <TableHeader>
-              <TableRow className="bg-orange-50/50 hover:bg-orange-50/50">
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead>ID Pedido</TableHead>
                 <TableHead>Mesa</TableHead>
                 <TableHead>Método</TableHead>
@@ -128,11 +128,11 @@ export default function VentasPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10 text-gray-400">Cargando ventas...</TableCell>
+                  <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Cargando ventas...</TableCell>
                 </TableRow>
               ) : filteredOrders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10 text-gray-400">No hay pedidos registrados</TableCell>
+                  <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">No hay pedidos registrados</TableCell>
                 </TableRow>
               ) : (
                 filteredOrders.map((o) => (
@@ -144,13 +144,13 @@ export default function VentasPage() {
                       Mesa {o.tableId.replace('table-', '')}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <div className="flex items-center gap-2 text-sm text-secondary-foreground">
                         <CreditCard size={14} />
                         <span className="capitalize">{o.paymentMethod}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-xs text-slate-600">
+                      <div className="text-xs text-secondary-foreground">
                         <p className="font-medium">{new Date(o.createdAt).toLocaleDateString()}</p>
                         <p className="opacity-70">{new Date(o.createdAt).toLocaleTimeString()}</p>
                       </div>
@@ -220,7 +220,7 @@ export default function VentasPage() {
                 <p className="text-xl font-black text-[#06b6d4] font-mono">S/ {selectedOrder.total.toFixed(2)}</p>
               </div>
 
-              <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
+              <div className="bg-orange-50 p-4 rounded-xl border border-border">
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-orange-600 font-bold uppercase">Método de Pago</span>
                   <span className="capitalize text-orange-700 font-medium">{selectedOrder.paymentMethod}</span>

@@ -1,18 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Poppins, Outfit } from "next/font/google";
 import "./globals.css";
-
-const poppins = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
 
 export const metadata: Metadata = {
   title: "Restaurante Inteligente v2.0",
@@ -32,6 +19,7 @@ export const viewport: Viewport = {
 
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export default function RootLayout({
   children,
@@ -41,17 +29,24 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${poppins.variable} h-full antialiased`}
+      className={`h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans">
-        <AuthProvider>
-          <CartProvider>
-            <main className="flex-1 overflow-y-auto pb-20">
-              {children}
-            </main>
-          </CartProvider>
-        </AuthProvider>
+      <body className="min-h-full flex flex-col" style={{ fontFamily: 'Arial, sans-serif' }}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <CartProvider>
+              <main className="flex-1 overflow-y-auto pb-20">
+                {children}
+              </main>
+            </CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

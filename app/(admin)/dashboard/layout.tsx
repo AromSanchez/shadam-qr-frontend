@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "./components/AppSidebar";
 import { Toaster } from "sonner";
+import { ThemeToggleButton } from "@/components/theme-toggle";
 
 export default function DashboardLayout({
   children,
@@ -24,7 +25,10 @@ export default function DashboardLayout({
             {/* Header */}
             <header className="h-16 flex items-center justify-between border-b px-4">
               <SidebarTrigger />
-              <span>Admin</span>
+              <div className="flex items-center gap-4">
+                <span>Admin</span>
+                <ThemeToggleButton />
+              </div>
             </header>
 
             {/* Page */}

@@ -10,7 +10,6 @@ import {
     SidebarMenuButton,
 } from "@/components/ui/sidebar";
 
-
 import {
     LayoutDashboard,
     UtensilsCrossed,
@@ -24,7 +23,6 @@ import {
 
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-
 
 const items = [
     { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -52,7 +50,7 @@ export function AppSidebar() {
     };
 
     return (
-        <Sidebar collapsible="icon" className="border-r-0 bg-[#B7410E]">
+        <Sidebar collapsible="icon" className="border-r border-border bg-background">
 
             {/* HEADER */}
             <div
@@ -63,10 +61,10 @@ export function AppSidebar() {
           group-data-[collapsible=icon]:pointer-events-none
         "
             >
-                <h1 className="text-xl font-bold text-white tracking-wide">
+                <h1 className="text-xl font-bold text-foreground tracking-wide">
                     Shadam
                 </h1>
-                <p className="text-xs text-white/70 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                     Gestión de restaurante
                 </p>
             </div>
@@ -74,14 +72,14 @@ export function AppSidebar() {
             {/* DIVIDER */}
             <div
                 className="
-          mx-4 h-px bg-white/15 transition-all
+          mx-4 h-px bg-border transition-all
           group-data-[collapsible=icon]:opacity-0
           group-data-[collapsible=icon]:invisible
         "
             />
 
             {/* CONTENT */}
-            <SidebarContent className="pt-5">
+            <SidebarContent className="pt-5 bg-background">
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu className="space-y-2">
@@ -97,18 +95,23 @@ export function AppSidebar() {
                                             tooltip={item.title}
                                             className={cn(
                                                 `
-          flex items-center gap-3 rounded-lg px-3 py-6
+          relative flex items-center gap-3 rounded-lg px-3 py-6
           text-[0.95rem] cursor-pointer transition-all
           group-data-[collapsible=icon]:justify-center
           group-data-[collapsible=icon]:px-0
           group-data-[collapsible=icon]:my-2
           `,
                                                 active
-                                                    ? "bg-white/20 text-white font-medium"
-                                                    : "text-white/80 hover:text-white hover:bg-white/10"
+                                                    ? "bg-primary/10 text-primary font-medium"
+                                                    : "text-muted-foreground hover:text-foreground hover:bg-primary/5"
                                             )}
                                         >
                                             <Link href={item.href} className="flex items-center gap-3 w-full">
+                                                {/* Active Indicator Line */}
+                                                {active && (
+                                                    <div className="absolute left-0 top-[10%] bottom-[10%] w-[4px] bg-primary rounded-r-md" />
+                                                )}
+
                                                 <Icon
                                                     className="
               h-4 w-4 shrink-0 transition-transform

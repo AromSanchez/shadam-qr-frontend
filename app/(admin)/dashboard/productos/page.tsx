@@ -164,9 +164,9 @@ export default function ProductosPage() {
           <div>
             <div className="flex items-center gap-2.5 mb-0.5">
               <Package className="text-[#06b6d4]" size={22} />
-              <h1 className="text-2xl font-bold text-gray-900">Gestión de Productos</h1>
+              <h1 className="text-2xl font-bold text-foreground">Gestión de Productos</h1>
             </div>
-            <p className="text-sm text-gray-500 pl-8">Administra el catálogo de platos y bebidas</p>
+            <p className="text-sm text-muted-foreground pl-8">Administra el catálogo de platos y bebidas</p>
           </div>
 
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -201,7 +201,7 @@ export default function ProductosPage() {
                   <div className="space-y-1.5">
                     <Label>Categoría</Label>
                     <select 
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm"
+                      className="w-full bg-card border border-border rounded-lg p-2 text-sm"
                       value={formData.categoryId}
                       onChange={e => setFormData({...formData, categoryId: e.target.value})}
                     >
@@ -215,7 +215,7 @@ export default function ProductosPage() {
                 <div className="space-y-1.5">
                   <Label>Descripción</Label>
                   <textarea 
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm min-h-[80px]"
+                    className="w-full bg-card border border-border rounded-lg p-2 text-sm min-h-[80px]"
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
                     placeholder="Breve descripción del producto..."
@@ -239,7 +239,7 @@ export default function ProductosPage() {
 
         {/* SEARCH & FILTERS */}
         <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
           <Input 
             placeholder="Buscar por nombre o descripción..." 
             className="pl-10"
@@ -248,48 +248,123 @@ export default function ProductosPage() {
           />
         </div>
 
-        {/* TABLE */}
-        <div className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
+        {/* ══════════════════════════════════════
+            MOBILE: lista de cards (oculto en md+)
+        ══════════════════════════════════════ */}
+        <div className="flex flex-col gap-3 md:hidden">
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Cargando productos...</p>
+          ) : filteredProducts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No hay productos registrados</p>
+          ) : (
+            filteredProducts.map((p) => (
+              <div
+                key={p.id}
+                className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm"
+              >
+                <div className="px-4 pt-4 pb-3 space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-muted rounded-lg overflow-hidden border border-border flex items-center justify-center flex-shrink-0">
+                      {p.image ? (
+                        <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Package size={20} className="text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground text-sm truncate">{p.name}</p>
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                        {categories.find(c => c.id === p.categoryId)?.name || "Sin categoría"}
+                      </span>
+                    </div>
+                    <span className="font-mono font-bold text-base text-foreground">
+                      S/ {p.price.toFixed(2)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-1 border-t border-border mt-2">
+                    <span className="text-xs text-muted-foreground line-clamp-1 flex-1 pr-2">{p.description}</span>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      p.available 
+                        ? "bg-emerald-50 text-emerald-600 border border-emerald-100" 
+                        : "bg-red-50 text-red-600 border border-red-100"
+                    }`}>
+                      {p.available ? "Disponible" : "Agotado"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* actions */}
+                <div className="flex border-t border-border">
+                  <button
+                    onClick={() => toggleAvailability(p)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors border-r border-border"
+                  >
+                    {p.available ? <XCircle size={13} /> : <CheckCircle2 size={13} />}
+                    {p.available ? "Agotar" : "Activar"}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteProduct(p.id)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 size={13} /> Eliminar
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* ══════════════════════════════════════
+            DESKTOP: tabla (oculto en mobile)
+        ══════════════════════════════════════ */}
+        <div className="hidden md:block bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+          <div className="px-5 py-3.5 bg-muted/40 border-b border-border">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#06b6d4]">
+              Listado de productos
+            </span>
+          </div>
+
           <Table>
             <TableHeader>
-              <TableRow className="bg-orange-50/50 hover:bg-orange-50/50">
-                <TableHead className="w-[80px]">Imagen</TableHead>
-                <TableHead>Producto</TableHead>
-                <TableHead>Categoría</TableHead>
-                <TableHead className="text-right">Precio</TableHead>
-                <TableHead className="text-center">Estado</TableHead>
-                <TableHead className="text-right pr-6">Acciones</TableHead>
+              <TableRow className="hover:bg-transparent border-border">
+                <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pl-5 w-[80px]">Imagen</TableHead>
+                <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Producto</TableHead>
+                <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Categoría</TableHead>
+                <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Precio</TableHead>
+                <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Estado</TableHead>
+                <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right pr-5">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-gray-400">Cargando productos...</TableCell>
+                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Cargando productos...</TableCell>
                 </TableRow>
               ) : filteredProducts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-gray-400">No hay productos registrados</TableCell>
+                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No hay productos registrados</TableCell>
                 </TableRow>
               ) : (
                 filteredProducts.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell>
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden border border-gray-100 flex items-center justify-center">
+                  <TableRow key={p.id} className="border-border hover:bg-muted/40 transition-colors">
+                    <TableCell className="pl-5">
+                      <div className="w-12 h-12 bg-muted rounded-lg overflow-hidden border border-border flex items-center justify-center">
                         {p.image ? (
                           <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
                         ) : (
-                          <Package size={20} className="text-gray-300" />
+                          <Package size={20} className="text-muted-foreground" />
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-bold text-gray-900">{p.name}</p>
-                        <p className="text-xs text-gray-500 line-clamp-1">{p.description}</p>
+                        <p className="font-bold text-foreground">{p.name}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1">{p.description}</p>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground">
                         {categories.find(c => c.id === p.categoryId)?.name || "Sin categoría"}
                       </span>
                     </TableCell>
@@ -312,15 +387,15 @@ export default function ProductosPage() {
                         )}
                       </button>
                     </TableCell>
-                    <TableCell className="text-right pr-6">
+                    <TableCell className="text-right pr-5">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-blue-600">
                           <Edit size={16} />
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 text-gray-400 hover:text-red-600"
+                          className="h-8 w-8 text-muted-foreground hover:text-red-600"
                           onClick={() => handleDeleteProduct(p.id)}
                         >
                           <Trash2 size={16} />

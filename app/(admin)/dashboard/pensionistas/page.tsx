@@ -151,15 +151,15 @@ export default function PensionistasPage() {
 
           {/* ── STATS ── */}
           <div className="flex flex-wrap gap-3">
-            <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
+            <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-sm text-gray-500">Activos</span>
-              <span className="text-sm font-bold text-gray-800">{totalActive}</span>
+              <span className="text-sm text-muted-foreground">Activos</span>
+              <span className="text-sm font-bold text-foreground">{totalActive}</span>
             </div>
-            <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
+            <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
               <Wallet size={13} className="text-[#06b6d4]" />
-              <span className="text-sm text-gray-500">Total</span>
-              <span className="text-sm font-bold text-gray-800">{data.length}</span>
+              <span className="text-sm text-muted-foreground">Total</span>
+              <span className="text-sm font-bold text-foreground">{data.length}</span>
             </div>
           </div>
 
@@ -168,9 +168,9 @@ export default function PensionistasPage() {
             <div>
               <div className="flex items-center gap-2.5 mb-0.5">
                 <Users className="text-[#06b6d4]" size={22} />
-                <h1 className="text-2xl font-bold text-gray-900">Pensionistas</h1>
+                <h1 className="text-2xl font-bold text-foreground">Pensionistas</h1>
               </div>
-              <p className="text-sm text-gray-500 pl-8">Gestión de usuarios con saldo prepagado</p>
+              <p className="text-sm text-muted-foreground pl-8">Gestión de usuarios con saldo prepagado</p>
             </div>
 
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
@@ -207,7 +207,7 @@ export default function PensionistasPage() {
                     <select
                       value={newPlan}
                       onChange={(e) => setNewPlan(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2 focus:ring-[#06b6d4] focus:border-[#06b6d4]"
+                      className="w-full bg-card border border-border rounded-lg p-2 focus:ring-[#06b6d4] focus:border-[#06b6d4]"
                     >
                       <option value="cupos">Por Cupos (Comidas)</option>
                       <option value="saldo">Por Saldo (Dinero)</option>
@@ -223,7 +223,7 @@ export default function PensionistasPage() {
 
           {/* ── BUSCADOR ── */}
           <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
             <Input
               placeholder="Buscar pensionista…"
               value={search}
@@ -237,29 +237,29 @@ export default function PensionistasPage() {
           ══════════════════════════════════════ */}
           <div className="flex flex-col gap-3 md:hidden">
             {filtered.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-8">No se encontraron resultados</p>
+              <p className="text-sm text-muted-foreground text-center py-8">No se encontraron resultados</p>
             )}
             {filtered.map((p) => (
               <div
                 key={p.id}
-                className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm"
+                className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm"
               >
                 {/* top info */}
                 <div className="px-4 pt-4 pb-3 space-y-2.5">
                   <div className="flex items-center gap-3">
                     <Initials name={p.fullName} size="md" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm truncate">{p.fullName}</p>
-                      <p className="text-xs text-gray-400">ID #{p.code}</p>
+                      <p className="font-semibold text-foreground text-sm truncate">{p.fullName}</p>
+                      <p className="text-xs text-muted-foreground">ID #{p.code}</p>
                     </div>
                     <StatusBadge status={p.status} />
                   </div>
 
-                  <div className="flex items-center justify-between pt-1 border-t border-orange-50">
-                    <span className="text-xs text-gray-500">Plan / Saldo</span>
+                  <div className="flex items-center justify-between pt-1 border-t border-border">
+                    <span className="text-xs text-muted-foreground">Plan / Saldo</span>
                     <span
                       className={`font-mono font-bold text-base ${
-                        p.balance < 0 ? "text-red-500" : "text-gray-800"
+                        p.balance < 0 ? "text-red-500" : "text-foreground"
                       }`}
                     >
                       {p.planType === 'cupos' ? `${p.lunchCredits} Cupos` : `S/ ${p.balance.toFixed(2)}`}
@@ -268,16 +268,16 @@ export default function PensionistasPage() {
                 </div>
 
                 {/* actions */}
-                <div className="flex border-t border-orange-100">
+                <div className="flex border-t border-border">
                   <button
                     onClick={() => openRecharge(p.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-[#06b6d4] hover:bg-[#fdf0ea] transition-colors border-r border-orange-100"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-[#06b6d4] hover:bg-[#fdf0ea] transition-colors border-r border-border"
                   >
                     <RefreshCw size={13} /> Recargar
                   </button>
                   <button
                     onClick={() => toast.info("Historial próximamente 👀")}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
                   >
                     <History size={13} /> Historial
                   </button>
@@ -289,8 +289,8 @@ export default function PensionistasPage() {
           {/* ══════════════════════════════════════
               DESKTOP: tabla (oculto en mobile)
           ══════════════════════════════════════ */}
-          <div className="hidden md:block bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
-            <div className="px-5 py-3.5 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
+          <div className="hidden md:block bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+            <div className="px-5 py-3.5 bg-muted/40 border-b border-border">
               <span className="text-xs font-bold uppercase tracking-widest text-[#06b6d4]">
                 Listado de pensionistas
               </span>
@@ -298,17 +298,17 @@ export default function PensionistasPage() {
 
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-orange-50">
-                  <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide pl-5">
+                <TableRow className="hover:bg-transparent border-border">
+                  <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pl-5">
                     Nombre
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">
+                  <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">
                     Saldo/Cupos
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     Estado
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right pr-5">
+                  <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right pr-5">
                     Acciones
                   </TableHead>
                 </TableRow>
@@ -317,7 +317,7 @@ export default function PensionistasPage() {
               <TableBody>
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-sm text-gray-400 py-10">
+                    <TableCell colSpan={4} className="text-center text-sm text-muted-foreground py-10">
                       No se encontraron resultados
                     </TableCell>
                   </TableRow>
@@ -325,14 +325,14 @@ export default function PensionistasPage() {
                 {filtered.map((p) => (
                   <TableRow
                     key={p.id}
-                    className="border-orange-50 hover:bg-orange-50/40 transition-colors"
+                    className="border-border hover:bg-muted/40 transition-colors"
                   >
                     <TableCell className="pl-5">
                       <div className="flex items-center gap-2.5">
                          <Initials name={p.fullName} />
                          <div>
-                           <span className="font-medium text-gray-800 text-sm block">{p.fullName}</span>
-                           <span className="text-xs text-gray-400">{p.code} • DNI: {p.dni}</span>
+                           <span className="font-medium text-foreground text-sm block">{p.fullName}</span>
+                           <span className="text-xs text-muted-foreground">{p.code} • DNI: {p.dni}</span>
                          </div>
                       </div>
                     </TableCell>
@@ -340,7 +340,7 @@ export default function PensionistasPage() {
                     <TableCell className="text-right">
                       <span
                         className={`font-mono font-bold text-sm ${
-                          p.balance < 0 ? "text-red-500" : "text-gray-800"
+                          p.balance < 0 ? "text-red-500" : "text-foreground"
                         }`}
                       >
                         {p.planType === 'cupos' ? `${p.lunchCredits} Cupos` : `S/ ${p.balance.toFixed(2)}`}
@@ -364,7 +364,7 @@ export default function PensionistasPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="gap-1.5 h-8 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                          className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-gray-700 hover:bg-muted"
                           onClick={() => toast.info("Historial próximamente 👀")}
                         >
                           <History size={12} /> Historial
@@ -390,14 +390,14 @@ export default function PensionistasPage() {
             <div className="flex items-center gap-3 bg-[#fdf0ea] border border-orange-200 rounded-xl px-4 py-3">
                <Initials name={selectedUser?.fullName ?? "?"} size="md" />
               <div>
-                <p className="text-xs text-gray-500">Pensionista</p>
-                <p className="text-sm font-semibold text-gray-800">{selectedUser?.fullName}</p>
+                <p className="text-xs text-muted-foreground">Pensionista</p>
+                <p className="text-sm font-semibold text-foreground">{selectedUser?.fullName}</p>
               </div>
               <div className="ml-auto text-right">
-                <p className="text-xs text-gray-500">Saldo/Cupos actual</p>
+                <p className="text-xs text-muted-foreground">Saldo/Cupos actual</p>
                 <p
                   className={`text-sm font-bold font-mono ${
-                    (selectedUser?.balance ?? 0) < 0 ? "text-red-500" : "text-gray-800"
+                    (selectedUser?.balance ?? 0) < 0 ? "text-red-500" : "text-foreground"
                   }`}
                 >
                   {selectedUser?.planType === 'cupos' ? `${selectedUser?.lunchCredits} Cupos` : `S/ ${selectedUser?.balance.toFixed(2)}`}

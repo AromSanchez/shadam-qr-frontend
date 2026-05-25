@@ -71,15 +71,15 @@ export default function ConsumosPage() {
           <div>
             <div className="flex items-center gap-2.5 mb-0.5">
               <ClipboardList className="text-[#06b6d4]" size={22} />
-              <h1 className="text-2xl font-bold text-gray-900">Historial de Consumos</h1>
+              <h1 className="text-2xl font-bold text-foreground">Historial de Consumos</h1>
             </div>
-            <p className="text-sm text-gray-500 pl-8">Registro de comidas validadas en recepción</p>
+            <p className="text-sm text-muted-foreground pl-8">Registro de comidas validadas en recepción</p>
           </div>
         </div>
 
         {/* SEARCH */}
         <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
           <Input 
             placeholder="Buscar por pensionista o tipo..." 
             className="pl-10"
@@ -89,10 +89,10 @@ export default function ConsumosPage() {
         </div>
 
         {/* TABLE */}
-        <div className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
           <Table>
             <TableHeader>
-              <TableRow className="bg-orange-50/50 hover:bg-orange-50/50">
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead>Pensionista</TableHead>
                 <TableHead>Tipo de Comida</TableHead>
                 <TableHead>Fecha</TableHead>
@@ -103,11 +103,11 @@ export default function ConsumosPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-gray-400">Cargando historial...</TableCell>
+                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Cargando historial...</TableCell>
                 </TableRow>
               ) : filteredConsumptions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-gray-400">No hay registros de consumo</TableCell>
+                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">No hay registros de consumo</TableCell>
                 </TableRow>
               ) : (
                 filteredConsumptions.map((c) => (
@@ -118,8 +118,8 @@ export default function ConsumosPage() {
                           <User size={14} />
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900 text-sm">{c.pensionistName}</p>
-                          <p className="text-[10px] text-gray-500 uppercase font-mono">{c.pensionistCode}</p>
+                          <p className="font-bold text-foreground text-sm">{c.pensionistName}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-mono">{c.pensionistCode}</p>
                         </div>
                       </div>
                     </TableCell>

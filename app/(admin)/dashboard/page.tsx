@@ -51,7 +51,7 @@ const topDishes = [
 ];
 
 const paymentData = [
-  { name: "Efectivo", value: 40, color: "#B7410E" },
+  { name: "Efectivo", value: 40, color: "#06b6d4" },
   { name: "Yape", value: 30, color: "#7c3aed" },
   { name: "Plin", value: 20, color: "#22c55e" },
   { name: "Saldo", value: 10, color: "#facc15" },

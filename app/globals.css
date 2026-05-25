@@ -78,12 +78,12 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: hsl(20 75% 38%);
-  --sidebar-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(20 75% 45%);
-  --sidebar-accent-foreground: hsl(0 0% 100%);
-  --sidebar-border: hsl(20 30% 30%);
-  --sidebar-ring: 20 75% 50%;
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: #06b6d4;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -181,7 +181,7 @@
   --pos-ease-smooth:  cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ─── DARK MODE TOKENS (primary) ─── */
+/* ─── ESTILOS PARA MODO OSCURO (Dark Mode) ─── */
 .dark {
   /* Backgrounds — deep navy slate */
   --pos-bg:            #0B1120;

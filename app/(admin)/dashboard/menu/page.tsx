@@ -114,11 +114,11 @@ export default function MenuDelDiaPage() {
   const iconBtnBase =
     "flex-shrink-0 w-9 h-9 rounded-lg border flex items-center justify-center transition-colors";
   const iconBtnNeutral =
-    `${iconBtnBase} border-gray-200 text-gray-400 hover:border-[#06b6d4] hover:text-[#06b6d4] hover:bg-[#fdf0ea]`;
+    `${iconBtnBase} border-border text-muted-foreground hover:border-[#06b6d4] hover:text-[#06b6d4] hover:bg-[#fdf0ea]`;
   const iconBtnActive =
     `${iconBtnBase} border-[#06b6d4] text-[#06b6d4] bg-[#fdf0ea]`;
   const iconBtnDanger =
-    `${iconBtnBase} border-gray-200 text-gray-400 hover:border-red-400 hover:text-red-500 hover:bg-red-50`;
+    `${iconBtnBase} border-border text-muted-foreground hover:border-red-400 hover:text-red-500 hover:bg-red-50`;
 
   return (
     <>
@@ -132,9 +132,9 @@ export default function MenuDelDiaPage() {
             <div>
               <div className="flex items-center gap-2.5 mb-0.5">
                 <UtensilsCrossed className="text-[#06b6d4]" size={22} />
-                <h1 className="text-2xl font-bold text-gray-900">Menú del Día</h1>
+                <h1 className="text-2xl font-bold text-foreground">Menú del Día</h1>
               </div>
-              <p className="text-sm text-gray-500 pl-8">Configura las entradas y grupos de menú</p>
+              <p className="text-sm text-muted-foreground pl-8">Configura las entradas y grupos de menú</p>
             </div>
 
             <div className="flex items-center gap-2 flex-col sm:flex-row w-full sm:w-auto">
@@ -157,9 +157,9 @@ export default function MenuDelDiaPage() {
                         Entradas
                       </p>
                       {entradas.filter((e) => e.name.trim()).map((e) => (
-                        <div key={e.id} className="text-sm text-gray-700 py-1.5 border-b border-dotted border-orange-100 last:border-0">
+                        <div key={e.id} className="text-sm text-gray-700 py-1.5 border-b border-dotted border-border last:border-0">
                           {e.name}
-                          {e.detail && <span className="text-gray-400 italic"> — {e.detail}</span>}
+                          {e.detail && <span className="text-muted-foreground italic"> — {e.detail}</span>}
                         </div>
                       ))}
                     </div>
@@ -169,9 +169,9 @@ export default function MenuDelDiaPage() {
                           <Tag size={11} /> Menú S/ {g.price || "?"}
                         </p>
                         {g.dishes.filter((d) => d.name.trim()).map((d) => (
-                          <div key={d.id} className="text-sm text-gray-700 py-1.5 border-b border-dotted border-orange-100 last:border-0">
+                          <div key={d.id} className="text-sm text-gray-700 py-1.5 border-b border-dotted border-border last:border-0">
                             {d.name}
-                            {d.detail && <span className="text-gray-400 italic"> — {d.detail}</span>}
+                            {d.detail && <span className="text-muted-foreground italic"> — {d.detail}</span>}
                           </div>
                         ))}
                       </div>
@@ -190,8 +190,8 @@ export default function MenuDelDiaPage() {
           </div>
 
           {/* ENTRADAS */}
-          <div className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
+          <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between px-5 py-3.5 bg-muted/40 border-b border-border">
               <div className="flex items-center gap-2">
                 <Layers size={14} className="text-[#06b6d4]" />
                 <span className="text-xs font-bold uppercase tracking-widest text-[#06b6d4]">
@@ -210,7 +210,7 @@ export default function MenuDelDiaPage() {
 
             <div className="p-5 space-y-3">
               {entradas.length === 0 && (
-                <p className="text-sm text-gray-300 text-center py-2">Sin entradas aún</p>
+                <p className="text-sm text-muted text-center py-2">Sin entradas aún</p>
               )}
               {entradas.map((e) => (
                 <div key={e.id}>
@@ -232,7 +232,7 @@ export default function MenuDelDiaPage() {
                     </button>
                   </div>
                   {e.showDetail && (
-                    <div className="mt-2 pl-3 border-l-2 border-orange-100">
+                    <div className="mt-2 pl-3 border-l-2 border-border">
                       <Input
                         placeholder="Descripción o detalle opcional…"
                         value={e.detail}
@@ -248,8 +248,8 @@ export default function MenuDelDiaPage() {
 
           {/* GRUPOS */}
           {groups.map((group, gi) => (
-            <div key={group.id} className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
-              <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
+            <div key={group.id} className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-5 py-3.5 bg-muted/40 border-b border-border">
                 <div className="flex items-center gap-2.5">
                   <span className="w-6 h-6 rounded-full bg-[#06b6d4] text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
                     {gi + 1}
@@ -280,7 +280,7 @@ export default function MenuDelDiaPage() {
                   />
                 </div>
 
-                <hr className="border-orange-50" />
+                <hr className="border-border" />
 
                 <div className="space-y-3">
                   {group.dishes.map((d) => (
@@ -306,7 +306,7 @@ export default function MenuDelDiaPage() {
                         </button>
                       </div>
                       {d.showDetail && (
-                        <div className="mt-2 pl-3 border-l-2 border-orange-100">
+                        <div className="mt-2 pl-3 border-l-2 border-border">
                           <Input
                             placeholder="Descripción o acompañamiento…"
                             value={d.detail}
@@ -334,7 +334,7 @@ export default function MenuDelDiaPage() {
           {/* ADD GROUP */}
           <button
             onClick={addGroup}
-            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 text-sm font-semibold hover:border-[#06b6d4] hover:text-[#06b6d4] hover:bg-[#fdf0ea] transition-all"
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-border text-muted-foreground text-sm font-semibold hover:border-[#06b6d4] hover:text-[#06b6d4] hover:bg-[#fdf0ea] transition-all"
           >
             <Plus size={16} /> Agregar nuevo grupo de menú
           </button>

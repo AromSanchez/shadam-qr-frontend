@@ -121,9 +121,9 @@ export default function Mesas() {
             <div>
               <div className="flex items-center gap-2.5 mb-0.5">
                 <LayoutGrid className="text-[#06b6d4]" size={22} />
-                <h1 className="text-2xl font-bold text-gray-900">Mesas</h1>
+                <h1 className="text-2xl font-bold text-foreground">Mesas</h1>
               </div>
-              <p className="text-sm text-gray-500 pl-8">Organiza el layout del restaurante</p>
+              <p className="text-sm text-muted-foreground pl-8">Organiza el layout del restaurante</p>
             </div>
 
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
@@ -157,27 +157,27 @@ export default function Mesas() {
 
           {/* STATS */}
           <div className="flex flex-wrap gap-3">
-            <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
+            <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-[#06b6d4]" />
-              <span className="text-sm text-gray-500">Ocupadas</span>
-              <span className="text-sm font-bold text-gray-800">{occupied}</span>
+              <span className="text-sm text-muted-foreground">Ocupadas</span>
+              <span className="text-sm font-bold text-foreground">{occupied}</span>
             </div>
-            <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
+            <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-gray-300" />
-              <span className="text-sm text-gray-500">Libres</span>
-              <span className="text-sm font-bold text-gray-800">{free}</span>
+              <span className="text-sm text-muted-foreground">Libres</span>
+              <span className="text-sm font-bold text-foreground">{free}</span>
             </div>
-            <div className="flex items-center gap-2 bg-white border border-orange-100 rounded-xl px-4 py-2.5 shadow-sm">
+            <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
               <LayoutGrid size={13} className="text-[#06b6d4]" />
-              <span className="text-sm text-gray-500">Total celdas</span>
-              <span className="text-sm font-bold text-gray-800">{total}</span>
+              <span className="text-sm text-muted-foreground">Total celdas</span>
+              <span className="text-sm font-bold text-foreground">{total}</span>
             </div>
           </div>
 
           {/* GRID CARD */}
-          <div className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
             {/* card header */}
-            <div className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
+            <div className="flex items-center gap-2 px-5 py-3.5 bg-muted/40 border-b border-border">
               <Move size={14} className="text-[#06b6d4]" />
               <span className="text-xs font-bold uppercase tracking-widest text-[#06b6d4]">
                 Arrastra las mesas para reorganizarlas
@@ -208,7 +208,7 @@ export default function Mesas() {
                           ? "border-[#06b6d4]/30 bg-[#fdf0ea]/60"
                           : isOver
                           ? "border-[#06b6d4] bg-[#fdf0ea]"
-                          : "border-gray-200 hover:border-[#06b6d4]/30"
+                          : "border-border hover:border-[#06b6d4]/30"
                         }`}
                       onDragOver={(e) => { e.preventDefault(); setDragOver(cellKey); }}
                       onDragLeave={() => setDragOver(null)}
@@ -229,7 +229,7 @@ export default function Mesas() {
                           {/* delete btn */}
                           <button
                             onClick={() => removeTable(table.id)}
-                            className="h-6 w-6 flex items-center justify-center rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
                           >
                             <Trash2 size={11} />
                           </button>
