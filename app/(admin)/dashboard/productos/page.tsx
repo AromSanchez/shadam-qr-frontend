@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2, Search, Package, Edit, ImagePlus, X } from "lucide-react";
+import { Plus, Trash2, Search, Package, Edit, ImagePlus, X, Eye } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -53,6 +53,8 @@ export default function ProductosPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,38 +110,19 @@ export default function ProductosPage() {
     try {
       setUploading(true);
 
-      /* 1. Subir imagen si existe */
-      let imageUrl = "";
+      const prodForm = new FormData();
+      prodForm.append("nombre", formData.name.trim());
+      prodForm.append("descripcion", formData.description.trim());
+      prodForm.append("precio", isEntrada ? "0" : formData.price);
+      prodForm.append("categoria", formData.categoryId.toUpperCase());
+      
       if (formData.imageFile) {
-        const imgForm = new FormData();
-        imgForm.append("file", formData.imageFile);
-        const imgRes = await fetch("/api/upload", { method: "POST", body: imgForm });
-        if (imgRes.ok) {
-          const imgData = await imgRes.json();
-          imageUrl = imgData.url ?? "";
-        }
-        // Si el endpoint no existe aún, usamos base64 como fallback
-        if (!imageUrl) {
-          imageUrl = formData.imagePreview; // base64 objectURL — reemplazar con URL real
-        }
-      }
-
-      /* 2. Crear producto */
-      const payload: Record<string, unknown> = {
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        categoryId: formData.categoryId,
-        available: true,
-        image: imageUrl,
-      };
-      if (!isEntrada) {
-        payload.price = Number(formData.price);
+        prodForm.append("imagen", formData.imageFile);
       }
 
       const res = await fetch("/api/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: prodForm, // Send form-data directly!
       });
 
       if (res.ok) {
@@ -168,6 +151,12 @@ export default function ProductosPage() {
     } catch {
       toast.error("Error de conexión");
     }
+  };
+
+  /* ─────────────── ver detalle ─────────────── */
+  const handleViewProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setIsViewDialogOpen(true);
   };
 
   const filteredProducts = products.filter(p =>
@@ -377,14 +366,20 @@ export default function ProductosPage() {
                       </span>
                     </div>
                     <span className="font-mono font-bold text-base text-foreground">
-                      {p.price > 0 ? `S/ ${p.price.toFixed(2)}` : "Gratis"}
+                      {p.price > 0 ? `S/ ${Number(p.price).toFixed(2)}` : "-"}
                     </span>
                   </div>
                   <div className="pt-1 border-t border-border">
                     <span className="text-xs text-muted-foreground line-clamp-2">{p.description}</span>
                   </div>
                 </div>
-                <div className="flex border-t border-border">
+                <div className="flex border-t border-border divide-x divide-border">
+                  <button
+                    onClick={() => handleViewProduct(p)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Eye size={13} /> Ver Detalle
+                  </button>
                   <button
                     onClick={() => handleDeleteProduct(p.id)}
                     className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
@@ -452,10 +447,18 @@ export default function ProductosPage() {
                       </span>
                     </TableCell>
                     <TableCell className="text-right font-mono font-bold text-foreground">
-                      {p.price > 0 ? `S/ ${p.price.toFixed(2)}` : <span className="text-emerald-500 text-xs font-semibold">Gratis</span>}
+                      {p.price > 0 ? `S/ ${Number(p.price).toFixed(2)}` : <span className="text-muted-foreground text-xs font-semibold">-</span>}
                     </TableCell>
                     <TableCell className="text-right pr-5">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          onClick={() => handleViewProduct(p)}
+                        >
+                          <Eye size={16} />
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
                           <Edit size={16} />
                         </Button>
@@ -475,7 +478,98 @@ export default function ProductosPage() {
             </TableBody>
           </Table>
         </div>
+
+        {/* ──── DIALOG DETALLE PREMIUM ──── */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="max-w-md bg-card border-border overflow-hidden rounded-2xl p-0 gap-0 shadow-elite animate-scale-in">
+            {selectedProduct && (
+              <div className="relative">
+                {/* Imagen del Producto */}
+                <div className="relative w-full h-64 bg-muted flex items-center justify-center overflow-hidden border-b border-border">
+                  {selectedProduct.image ? (
+                    <img
+                      src={selectedProduct.image}
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Package size={48} className="stroke-[1.5]" />
+                      <span className="text-xs">Sin imagen disponible</span>
+                    </div>
+                  )}
+                  {/* Badge de Categoría */}
+                  <span
+                    className={cn(
+                      "absolute top-4 left-4 text-xs font-semibold px-3 py-1 rounded-full shadow-md backdrop-blur-md",
+                      selectedProduct.categoryId === "entrada"
+                        ? "bg-emerald-500/90 text-white"
+                        : "bg-primary/95 text-white"
+                    )}
+                  >
+                    {getCategoryName(selectedProduct.categoryId)}
+                  </span>
+                </div>
+
+                {/* Contenido del Detalle */}
+                <div className="p-6 space-y-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground leading-tight tracking-tight">
+                      {selectedProduct.name}
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-1">ID: {selectedProduct.id}</p>
+                  </div>
+
+                  {selectedProduct.description ? (
+                    <div className="space-y-1">
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Descripción</span>
+                      <p className="text-sm text-foreground leading-relaxed bg-muted/30 p-3 rounded-xl border border-border">
+                        {selectedProduct.description}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs italic text-muted-foreground">Sin descripción registrada.</p>
+                  )}
+
+                  {/* Fila de Detalles Rápidos */}
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Precio</span>
+                      <span className="font-mono font-extrabold text-lg text-foreground mt-0.5">
+                        {selectedProduct.price > 0 ? `S/ ${Number(selectedProduct.price).toFixed(2)}` : "-"}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Disponibilidad</span>
+                      <span
+                        className={cn(
+                          "text-xs font-bold mt-1.5 flex items-center gap-1.5",
+                          selectedProduct.available !== false ? "text-emerald-500" : "text-red-500"
+                        )}
+                      >
+                        <span className={cn("w-2 h-2 rounded-full animate-pulse", selectedProduct.available !== false ? "bg-emerald-500" : "bg-red-500")} />
+                        {selectedProduct.available !== false ? "Disponible" : "Agotado"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer del Modal */}
+                <div className="px-6 py-4 bg-muted/40 border-t border-border flex justify-end">
+                  <Button
+                    onClick={() => setIsViewDialogOpen(false)}
+                    className="bg-primary hover:bg-primary/95 text-primary-foreground rounded-lg px-6"
+                  >
+                    Cerrar Vista
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
 }
+

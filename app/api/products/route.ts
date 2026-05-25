@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/mock-db";
+
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:4000";
 
 // GET /api/products
 export async function GET(request: Request) {
@@ -7,46 +8,92 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const categoryId = searchParams.get("categoryId");
 
-    let products = db.products;
+    // Fetch from real backend
+    const backendRes = await fetch(`${BACKEND_URL}/productos`, {
+      cache: "no-store",
+    });
+
+    if (!backendRes.ok) {
+      return NextResponse.json({ error: "Error fetching products from backend" }, { status: backendRes.status });
+    }
+
+    let products = await backendRes.json();
+
+    // Map backend categories to frontend values if necessary
+    // Backend returns "ENTRADA" or "MENU". Frontend uses "entrada" or "menu".
+    products = products.map((p: any) => ({
+      ...p,
+      id: String(p.id),
+      name: p.nombre,
+      description: p.descripcion || "",
+      price: Number(p.precio || 0),
+      categoryId: p.categoria?.toLowerCase() || "",
+      image: p.imagen ? (p.imagen.startsWith("http") ? p.imagen : `${BACKEND_URL}${p.imagen}`) : "",
+    }));
 
     if (categoryId) {
-      products = products.filter(p => p.categoryId === categoryId);
+      products = products.filter((p: any) => p.categoryId === categoryId.toLowerCase());
     }
 
     return NextResponse.json(products);
   } catch (error) {
-    return NextResponse.json({ error: "Error fetching products" }, { status: 500 });
+    console.error("[Products API GET] Error:", error);
+    return NextResponse.json({ error: "Error connecting to backend" }, { status: 502 });
   }
 }
 
 // POST /api/products
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const contentType = request.headers.get("content-type") || "";
     
-    // Validate required fields
-    if (!body.name || !body.price || !body.categoryId) {
-      return NextResponse.json({ error: "Name, price and categoryId are required" }, { status: 400 });
+    let backendResponse;
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      
+      // Forward form-data to the backend
+      backendResponse = await fetch(`${BACKEND_URL}/productos`, {
+        method: "POST",
+        body: formData, // fetch will automatically set the correct Boundary header
+      });
+    } else {
+      // JSON fallback, build a Form-data structure because the backend documentation requires body: form-data
+      const body = await request.json();
+      const formData = new FormData();
+      formData.append("nombre", body.name || body.nombre || "");
+      formData.append("descripcion", body.description || body.descripcion || "");
+      formData.append("precio", String(body.price || body.precio || "0"));
+      formData.append("categoria", (body.categoryId || body.categoria || "").toUpperCase());
+      
+      backendResponse = await fetch(`${BACKEND_URL}/productos`, {
+        method: "POST",
+        body: formData,
+      });
     }
 
-    const newProduct = {
-      id: db.generateId("prod"),
-      name: body.name,
-      description: body.description || "",
-      price: Number(body.price),
-      categoryId: body.categoryId,
-      image: body.image || "",
-      available: body.available !== undefined ? body.available : true,
-      calories: body.calories || "",
-      time: body.time || "",
-      popular: body.popular || false,
-      createdAt: new Date().toISOString(),
+    const data = await backendResponse.json();
+
+    if (!backendResponse.ok) {
+      return NextResponse.json(data, { status: backendResponse.status });
+    }
+
+    // Map backend response back to frontend interface
+    const mappedProduct = {
+      ...data,
+      id: String(data.id),
+      name: data.nombre,
+      description: data.descripcion || "",
+      price: Number(data.precio),
+      categoryId: data.categoria?.toLowerCase() || "",
+      image: data.imagen ? (data.imagen.startsWith("http") ? data.imagen : `${BACKEND_URL}${data.imagen}`) : "",
+      available: true,
     };
 
-    db.products.push(newProduct);
-
-    return NextResponse.json(newProduct, { status: 201 });
+    return NextResponse.json(mappedProduct, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: "Error creating product" }, { status: 500 });
+    console.error("[Products API POST] Error:", error);
+    return NextResponse.json({ error: "Error creating product in backend" }, { status: 502 });
   }
 }
+
