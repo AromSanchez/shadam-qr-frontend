@@ -41,7 +41,7 @@ export default function RootLayout({
         >
           <AuthProvider>
             <CartProvider>
-              <main className="flex-1 overflow-y-auto pb-20">
+              <main className="flex-1 overflow-y-auto">
                 {children}
               </main>
             </CartProvider>
