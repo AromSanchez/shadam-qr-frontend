@@ -151,12 +151,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             // Backend returns { first_login, role }
-            if (data.role !== "admin") {
-              // Logout immediately — this frontend is admin-only
+            if (data.role !== "admin" && data.role !== "pensionista") {
+              // Logout immediately
               await fetch("/api/auth/logout", { method: "POST" });
               return {
                 success: false,
-                message: "Acceso restringido. Esta área es solo para administradores.",
+                message: "Acceso restringido. Rol no autorizado.",
               };
             }
 

@@ -73,64 +73,132 @@ function CircularProgress({ percent, label, sublabel }: { percent: number; label
   );
 }
 
-// ─── Data Mocks ──────────────────────────────────────
-const USER_MOCK = {
-  email: "ricardo.alzate@email.com",
-  id: "1.092.384.XX",
-  plan: "Menú Mensual Premium",
-  memberSince: "Ene 2026",
+type SectionView = "asistencias" | "perfil";
+
+type ConsumptionData = {
+  id: string;
+  mealType: "desayuno" | "almuerzo" | "cena";
+  date: string;
+  time: string;
+  status: "confirmado" | "anulado";
 };
 
-const TODAY_MEALS = [
-  { id: "desayuno", label: "Desayuno", icon: Coffee, timeStr: "07:00 AM - 10:00 AM", status: "signed", timeSigned: "08:15 AM" },
-  { id: "almuerzo", label: "Almuerzo", icon: Utensils, timeStr: "12:00 PM - 03:00 PM", status: "pending" },
-  { id: "cena", label: "Cena", icon: MoonStar, timeStr: "07:00 PM - 10:00 PM", status: "locked" },
-];
-
-const HISTORY_DATA = [
-  {
-    date: "Ayer (5 Mar)",
-    items: [
-      { id: 1, name: "Desayuno", time: "08:30 AM", status: "signed" },
-      { id: 2, name: "Almuerzo", time: "01:15 PM", status: "signed" },
-      { id: 3, name: "Cena", time: "---", status: "missed" },
-    ],
-  },
-  {
-    date: "4 Mar 2026",
-    items: [
-      { id: 4, name: "Desayuno", time: "07:45 AM", status: "signed" },
-      { id: 5, name: "Almuerzo", time: "01:00 PM", status: "signed" },
-      { id: 6, name: "Cena", time: "07:30 PM", status: "signed" },
-    ],
-  },
-];
-
-type SectionView = "asistencias" | "perfil";
+type PensionistProfile = {
+  fullName: string;
+  dni: string;
+  planType: string;
+  startDate: string;
+  endDate: string;
+  balance?: number;
+  breakfastCredits?: number;
+  lunchCredits?: number;
+  dinnerCredits?: number;
+  consumptions: ConsumptionData[];
+};
 
 export default function ConsumoPage() {
   const [activeSection, setActiveSection] = useState<SectionView>("asistencias");
-  const { user, logout } = useAuth();
+  const { user, logout, login } = useAuth();
   const router = useRouter();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<PensionistProfile | null>(null);
 
   useEffect(() => {
     if (!user || user.role !== "pensionista") {
       router.replace("/pensionista");
+      return;
     }
-  }, [user, router]);
 
-  const totalAsistencias = 28;
-  const asistenciasMensualesGoal = 60;
-  const percentComplete = (totalAsistencias / asistenciasMensualesGoal) * 100;
-  const diasRestantes = 15;
+    const fetchFreshData = async () => {
+      if (!user.code) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const res = await fetch("/api/pensionists/validate-qr", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ qrCode: user.code })
+        });
+        
+        if (!res.ok) {
+          const err = await res.json();
+          setError(err.error || "Error al obtener datos");
+        } else {
+          const data = await res.json();
+          setProfile(data);
+          
+          // Opcional: sincronizar balance
+          if (data.balance !== undefined && user.balance !== data.balance) {
+             login({ ...user, balance: data.balance });
+          }
+        }
+      } catch (e) {
+        setError("Error de conexión");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!user || user.role !== "pensionista") {
+    fetchFreshData();
+  }, [user, router, login]);
+
+  if (!user || user.role !== "pensionista" || loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[#060913] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
+
+  // --- Process Data ---
+  const consumptions = profile?.consumptions || [];
+  
+  // Agrupar por fecha
+  const historyMap = consumptions.reduce((acc, curr) => {
+    if (!acc[curr.date]) acc[curr.date] = [];
+    acc[curr.date].push(curr);
+    return acc;
+  }, {} as Record<string, ConsumptionData[]>);
+
+  const historyData = Object.keys(historyMap).sort((a, b) => new Date(b).getTime() - new Date(a).getTime()).map(date => {
+    return {
+      date: date,
+      items: historyMap[date].map((c, i) => ({
+        id: c.id || i.toString(),
+        name: c.mealType === "desayuno" ? "Desayuno" : c.mealType === "almuerzo" ? "Almuerzo" : "Cena",
+        time: c.time,
+        status: c.status === "confirmado" ? "signed" : "missed",
+        // Mock cost if using balance
+        cost: c.mealType === "desayuno" ? 15.00 : c.mealType === "almuerzo" ? 25.00 : 20.00
+      }))
+    }
+  });
+
+  const totalAsistencias = consumptions.filter(c => c.status === "confirmado").length;
+  const asistenciasMensualesGoal = 60; // Hardcoded goal for now
+  const percentComplete = Math.min((totalAsistencias / asistenciasMensualesGoal) * 100, 100);
+  
+  const diasRestantes = profile?.endDate 
+    ? Math.max(0, Math.ceil((new Date(profile.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))
+    : 0;
+
+  // Secuencia de Hoy (simplificada)
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayConsumptions = historyMap[todayStr] || [];
+  
+  const hasDesayuno = todayConsumptions.some(c => c.mealType === "desayuno" && c.status === "confirmado");
+  const hasAlmuerzo = todayConsumptions.some(c => c.mealType === "almuerzo" && c.status === "confirmado");
+  const hasCena = todayConsumptions.some(c => c.mealType === "cena" && c.status === "confirmado");
+
+  const todayMeals = [
+    { id: "desayuno", label: "Desayuno", icon: Coffee, timeStr: "07:00 AM - 10:00 AM", status: hasDesayuno ? "signed" : "pending" },
+    { id: "almuerzo", label: "Almuerzo", icon: Utensils, timeStr: "12:00 PM - 03:00 PM", status: hasAlmuerzo ? "signed" : "pending" },
+    { id: "cena", label: "Cena", icon: MoonStar, timeStr: "07:00 PM - 10:00 PM", status: hasCena ? "signed" : "locked" },
+  ];
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 pb-32">
@@ -161,13 +229,17 @@ export default function ConsumoPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 mt-8">
-             <div className="glass-premium rounded-3xl p-5 border-white/10 shadow-2xl bg-white/5 flex flex-col items-center">
-                <p className="text-white text-2xl font-black font-display leading-none">{diasRestantes}</p>
-                <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mt-2">Días Restantes</p>
+             <div className="glass-premium rounded-3xl p-5 border-white/10 shadow-2xl bg-white/5 flex flex-col items-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/20 rounded-full blur-xl -mr-8 -mt-8" />
+                <p className="text-emerald-400 text-2xl font-black font-display leading-none relative z-10">
+                  S/ {user.balance ? user.balance.toFixed(2) : "150.00"}
+                </p>
+                <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mt-2 relative z-10">Saldo Prepago</p>
              </div>
-             <div className="glass-premium rounded-3xl p-5 border-white/10 shadow-2xl bg-white/5 flex flex-col items-center">
-                <p className="text-cyan-400 text-2xl font-black font-display leading-none">4.8</p>
-                <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mt-2">Rating Chef</p>
+             <div className="glass-premium rounded-3xl p-5 border-white/10 shadow-2xl bg-white/5 flex flex-col items-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-16 h-16 bg-cyan-500/20 rounded-full blur-xl -ml-8 -mt-8" />
+                <p className="text-white text-2xl font-black font-display leading-none relative z-10">{diasRestantes}</p>
+                <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mt-2 relative z-10">Días Restantes</p>
              </div>
           </div>
         </div>
@@ -225,7 +297,7 @@ export default function ConsumoPage() {
                </div>
 
                <div className="space-y-4">
-                  {TODAY_MEALS.map((meal, idx) => (
+                  {todayMeals.map((meal, idx) => (
                     <motion.div 
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -255,7 +327,7 @@ export default function ConsumoPage() {
                           {meal.status === 'signed' ? (
                              <>
                                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                               <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tighter">SUCCESS</span>
+                               <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tighter">CONFIRMADO</span>
                              </>
                           ) : meal.status === 'pending' ? (
                              <motion.div 
@@ -276,35 +348,66 @@ export default function ConsumoPage() {
 
             {/* Premium History */}
             <div>
-               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-display mb-6 ml-1">Bitácora de Accesos</h3>
-               <div className="space-y-4">
-                 {HISTORY_DATA.map((group, gi) => (
-                    <div key={gi} className="p-1">
-                       <p className="text-[10px] font-black text-slate-400 uppercase mb-3 ml-2">{group.date}</p>
-                       <div className="bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] p-2 space-y-1">
-                          {group.items.map(item => (
-                            <div key={item.id} className="bg-white dark:bg-slate-800 rounded-2xl p-4 flex items-center justify-between border border-slate-100 dark:border-white/5 transition-transform hover:scale-[1.01] cursor-pointer">
-                               <div className="flex items-center gap-3">
-                                  <div className={`w-8 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                                    item.status === 'missed' ? 'opacity-30' : 'bg-slate-900 text-white'
-                                  }`}>
-                                     {item.status === 'signed' ? <span className="rotate-90 text-[8px] font-black opacity-40 uppercase tracking-[0.2em] -mt-1">{item.time.split(' ')[0]}</span> : <span className="text-xl font-bold opacity-20 relative top-0.5">!</span>}
-                                  </div>
-                                  <h5 className={`font-black text-xs font-display tracking-widest uppercase ${item.status === 'missed' ? 'text-slate-300 line-through' : 'text-slate-700 dark:text-slate-200'}`}>
-                                     {item.name}
-                                  </h5>
-                               </div>
-                               <div className="flex items-center gap-2">
-                                  {item.status === 'signed' ? (
-                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                                  ) : <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                               </div>
-                            </div>
-                          ))}
-                       </div>
-                    </div>
-                 ))}
-               </div>
+               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] font-display mb-6 ml-1">Historial de Consumos</h3>
+               
+               {historyData.length === 0 ? (
+                 <div className="bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] p-8 text-center border-2 border-dashed border-slate-200 dark:border-white/10">
+                   <Activity className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                   <h4 className="text-slate-500 dark:text-slate-400 font-bold font-display">No hay consumos registrados</h4>
+                   <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Aparecerán aquí cuando escaneen tu QR</p>
+                 </div>
+               ) : (
+                 <div className="space-y-4">
+                   {historyData.map((group, gi) => (
+                      <div key={gi} className="p-1">
+                         <p className="text-[10px] font-black text-slate-400 uppercase mb-3 ml-2">{group.date}</p>
+                         <div className="bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] p-2 space-y-1">
+                            {group.items.map(item => (
+                              <div key={item.id} className="bg-white dark:bg-slate-800 rounded-2xl p-4 flex items-center justify-between border border-slate-100 dark:border-white/5 transition-transform hover:scale-[1.01] cursor-pointer shadow-sm">
+                                 <div className="flex items-center gap-4">
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${
+                                      item.status === 'missed' ? 'bg-slate-100 dark:bg-slate-900/50 text-slate-400' : 
+                                      item.name === 'Desayuno' ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-500 border border-orange-100 dark:border-orange-500/20' :
+                                      item.name === 'Almuerzo' ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 border border-emerald-100 dark:border-emerald-500/20' :
+                                      'bg-blue-50 dark:bg-blue-950/30 text-blue-500 border border-blue-100 dark:border-blue-500/20'
+                                    }`}>
+                                       {item.status === 'signed' ? (
+                                          item.name === 'Desayuno' ? <Coffee className="w-6 h-6" /> :
+                                          item.name === 'Almuerzo' ? <Utensils className="w-6 h-6" /> :
+                                          <MoonStar className="w-6 h-6" />
+                                       ) : <span className="text-xl font-bold opacity-30">!</span>}
+                                    </div>
+                                    <div>
+                                      <h5 className={`font-black text-sm font-display tracking-tight leading-none mb-1 ${item.status === 'missed' ? 'text-slate-400 line-through' : 'text-slate-800 dark:text-slate-100'}`}>
+                                         {item.name}
+                                      </h5>
+                                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.status === 'missed' ? 'Anulado' : item.time}</p>
+                                    </div>
+                                 </div>
+                                 <div className="flex flex-col items-end gap-1">
+                                    {item.status === 'signed' ? (
+                                      <>
+                                        <span className="text-sm font-black text-slate-900 dark:text-white font-display">
+                                          - S/ {item.cost.toFixed(2)}
+                                        </span>
+                                        <div className="flex items-center gap-1">
+                                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                          <span className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">Pagado</span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <span className="text-sm font-black text-slate-300 dark:text-slate-600 font-display">
+                                        S/ 0.00
+                                      </span>
+                                    )}
+                                 </div>
+                              </div>
+                            ))}
+                         </div>
+                      </div>
+                   ))}
+                 </div>
+               )}
             </div>
           </motion.div>
         ) : (
@@ -328,19 +431,19 @@ export default function ConsumoPage() {
                         <ShieldCheck className="w-5 h-5 text-emerald-500" />
                      </div>
                   </div>
-                  <h2 className="text-3xl font-black text-slate-800 dark:text-white font-display tracking-tight leading-none mb-2">{user.name}</h2>
+                  <h2 className="text-3xl font-black text-slate-800 dark:text-white font-display tracking-tight leading-none mb-2">{profile?.fullName || user.name}</h2>
                   <p className="text-[10px] font-black text-slate-400 capitalize bg-slate-50 dark:bg-slate-800 px-4 py-1.5 rounded-full inline-block mb-8">
-                     Miembro {USER_MOCK.plan}
+                     Miembro {profile?.planType || user.planType || 'Premium'}
                   </p>
                   
                   <div className="w-full space-y-4 pt-4 border-t border-slate-50 dark:border-white/5">
                      <div className="flex items-center justify-between px-2">
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">Identificación</span>
-                        <span className="text-xs font-black text-slate-800 dark:text-white font-display">{user.dni || USER_MOCK.id}</span>
+                        <span className="text-xs font-black text-slate-800 dark:text-white font-display">{profile?.dni || user.dni || user.code}</span>
                      </div>
                      <div className="flex items-center justify-between px-2">
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-widest font-display">Antigüedad</span>
-                        <span className="text-xs font-black text-slate-800 dark:text-white font-display">{user.startDate ? new Date(user.startDate).toLocaleDateString() : USER_MOCK.memberSince}</span>
+                        <span className="text-xs font-black text-slate-800 dark:text-white font-display">{profile?.startDate || user.startDate ? new Date(profile?.startDate || user.startDate || '').toLocaleDateString() : 'N/A'}</span>
                      </div>
                   </div>
                </div>
@@ -356,8 +459,6 @@ export default function ConsumoPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <BottomNav />
     </div>
   );
 }

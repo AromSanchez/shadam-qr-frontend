@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { LoginModal } from "./login-modal";
-import { LogOut, User as UserIcon, Bell, ChevronDown } from "lucide-react";
+import { LogOut, User as UserIcon, Bell, ChevronDown, Moon, Sun } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "next-themes";
 
 export function HeaderProfile() {
   const { user, logout } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   return (
     <>
@@ -29,6 +34,17 @@ export function HeaderProfile() {
         </motion.div>
 
         <div className="flex items-center gap-3">
+          {mounted && (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="relative w-9 h-9 flex items-center justify-center bg-white dark:bg-white/10 backdrop-blur-xl rounded-full text-slate-700 dark:text-white/90 shrink-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/20 transition-all border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-lg"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </motion.button>
+          )}
+
           <motion.div 
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}

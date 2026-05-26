@@ -186,8 +186,6 @@ export default function QRIdentityPage() {
         </p>
 
       </div>
-      
-      <BottomNav />
     </div>
   );
 }
