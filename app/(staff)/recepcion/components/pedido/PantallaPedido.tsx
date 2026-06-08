@@ -21,7 +21,7 @@ interface PantallaPedidoProps {
 }
 
 export default function PantallaPedido({ mesaId, tipoCliente, pensionista, onVolver, onPedidoConfirmado, onItemsReady }: PantallaPedidoProps) {
-  const { state, crearPedido, mostrarToast } = usePosContext()
+  const { state, crearPedidoAsync, mostrarToast } = usePosContext()
   const { mesas, productos, pedidos, modoActual } = state
 
   const mesa = mesas.find((m) => m.id === mesaId)
@@ -30,6 +30,7 @@ export default function PantallaPedido({ mesaId, tipoCliente, pensionista, onVol
   const [items, setItems] = useState<ItemPedido[]>([])
   const [extras, setExtras] = useState<Extra[]>([])
   const [exito, setExito] = useState(false)
+  const [enviando, setEnviando] = useState(false)
 
   // Verify no duplicate order (skip for código collect mode)
   const pedidoExistente = pedidos.find((p) => p.mesaId === mesaId && p.estado === 'activo')
@@ -86,7 +87,7 @@ export default function PantallaPedido({ mesaId, tipoCliente, pensionista, onVol
     setExtras((prev) => prev.filter((e) => e.id !== id))
   }, [])
 
-  const handleConfirmar = useCallback(() => {
+  const handleConfirmar = useCallback(async () => {
     if (items.length === 0) {
       mostrarToast({ mensaje: 'Agrega al menos un producto', tipo: 'warning' })
       return
@@ -98,18 +99,19 @@ export default function PantallaPedido({ mesaId, tipoCliente, pensionista, onVol
       return
     }
 
-    // ── Normal mode: create pedido in context ──
+    // ── Normal mode: create pedido via backend API ──
     if (pedidoExistente && mesaId !== 'para_llevar') {
       mostrarToast({ mensaje: 'Esta mesa ya tiene un pedido activo', tipo: 'error' })
       return
     }
 
     if (esPensionista && pensionista && total > pensionista.saldo) {
-      mostrarToast({ mensaje: `⚠️ Saldo insuficiente. Pedido registrado y se notificará al administrador.`, tipo: 'warning', duracion: 4000 })
+      mostrarToast({ mensaje: 'Saldo insuficiente. Pedido registrado y se notificara al administrador.', tipo: 'warning', duracion: 4000 })
     }
 
+    setEnviando(true)
     const mesasUnidas = mesa?.unidaCon || []
-    crearPedido({
+    const pedidoId = await crearPedidoAsync({
       mesaId,
       mesasUnidas,
       items,
@@ -120,10 +122,15 @@ export default function PantallaPedido({ mesaId, tipoCliente, pensionista, onVol
       pensionistas: pensionista ? [{ ...pensionista, pedidoConfirmado: true, itemsPedido: items, extras }] : undefined,
       estado: 'activo',
     })
+    setEnviando(false)
 
-    mostrarToast({ mensaje: '✅ Pedido registrado', tipo: 'success' })
+    if (pedidoId) {
+      mostrarToast({ mensaje: 'Pedido registrado correctamente', tipo: 'success' })
+    } else {
+      mostrarToast({ mensaje: 'Pedido guardado localmente (sin conexion al servidor)', tipo: 'warning' })
+    }
     setExito(true)
-  }, [items, extras, total, mesaId, mesa, modoActual, tipoCliente, pensionista, crearPedido, mostrarToast, pedidoExistente, esPensionista, onItemsReady])
+  }, [items, extras, total, mesaId, mesa, modoActual, tipoCliente, pensionista, crearPedidoAsync, mostrarToast, pedidoExistente, esPensionista, onItemsReady])
 
   if (exito) {
     return (
@@ -181,11 +188,12 @@ export default function PantallaPedido({ mesaId, tipoCliente, pensionista, onVol
         extras={extras}
         tipoCliente={tipoCliente}
         saldoPensionista={pensionista?.saldo}
-        confirmLabel={confirmLabel}
+        confirmLabel={enviando ? 'Enviando...' : confirmLabel}
         onQuitarItem={quitarItem}
         onToggleParaLlevar={toggleParaLlevar}
         onCancelar={onVolver}
         onConfirmar={handleConfirmar}
+        disabled={enviando}
       />
     </div>
   )

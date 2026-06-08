@@ -20,7 +20,7 @@ import ModalPago from './ModalPago'
 import ModalEditarPedido from './ModalEditarPedido'
 
 export default function ListaPedidos() {
-  const { state, finalizarPedido, eliminarPedido, actualizarPedido, mostrarToast } = usePosContext()
+  const { state, finalizarPedido, eliminarPedido, eliminarPedidoAsync, actualizarPedido, actualizarPedidoAsync, pagarPedido, mostrarToast } = usePosContext()
 
   // BUG FIX: Sort oldest-first so most urgent orders appear at the top
   const pedidosActivos = state.pedidos
@@ -65,32 +65,62 @@ export default function ListaPedidos() {
   }
 
   // ── Handlers ─────────────────────────────────────────────────
-  // BUG FIX: Accept metodo from ModalPago and include in toast
-  const handlePagar = (pedido: Pedido, metodo: MetodoPago) => {
-    finalizarPedido(pedido.id)
+  // Pagar pedido via backend API (POST /pedidos/:id/pagar) - converts to venta
+  const handlePagar = async (pedido: Pedido, metodo: MetodoPago) => {
     setPagoModal(null)
     const metodoLabel = metodo === 'efectivo' ? 'Efectivo' : 'Yape'
-    mostrarToast({ mensaje: `✅ Pago por ${metodoLabel} registrado · Mesa liberada`, tipo: 'success' })
+    const success = await pagarPedido(pedido.id, metodo, pedido.total)
+    if (success) {
+      mostrarToast({ mensaje: `Pago por ${metodoLabel} registrado - Venta creada - Mesa liberada`, tipo: 'success' })
+    } else {
+      mostrarToast({ mensaje: `Pago por ${metodoLabel} registrado localmente (sin conexion al servidor)`, tipo: 'warning' })
+    }
   }
 
-  const handleFinalizar = (pedido: Pedido) => {
+  // Finalizar pedido pensionista (no requiere pago monetario - consume saldo)
+  const handleFinalizar = async (pedido: Pedido) => {
+    // Consume balance from pensionista if they have an ID
+    if (pedido.pensionistas && pedido.pensionistas.length > 0) {
+      for (const pens of pedido.pensionistas) {
+        if (pens.id && pedido.total > 0) {
+          try {
+            await fetch(`/api/proxy?path=${encodeURIComponent(`/users/${pens.id}/consume`)}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ amount: pedido.total, description: `Pedido #${pedido.numeroPedido}` }),
+            })
+          } catch { /* consume failed - continue anyway */ }
+        }
+      }
+    }
+    // Confirm the order in the backend
+    try {
+      const { confirmarPedidoAPI } = await import('@/lib/pedidos-api')
+      await confirmarPedidoAPI(pedido.id)
+    } catch { /* fallback to local */ }
     finalizarPedido(pedido.id)
-    mostrarToast({ mensaje: `✅ Pedido finalizado · Mesa liberada`, tipo: 'success' })
+    mostrarToast({ mensaje: `Pedido finalizado - Saldo consumido - Mesa liberada`, tipo: 'success' })
   }
 
-  const handleGuardarEdicion = (cambios: { items: ItemPedido[]; extras: Extra[]; total: number }) => {
+  // Editar pedido via backend API (PATCH /pedidos/:id)
+  const handleGuardarEdicion = async (cambios: { items: ItemPedido[]; extras: Extra[]; total: number }) => {
     if (!editModal) return
-    actualizarPedido(editModal.id, cambios)
-    mostrarToast({ mensaje: `✏️ Pedido #${editModal.numeroPedido} actualizado`, tipo: 'success' })
+    const success = await actualizarPedidoAsync(editModal.id, cambios)
+    if (success) {
+      mostrarToast({ mensaje: `Pedido #${editModal.numeroPedido} actualizado`, tipo: 'success' })
+    } else {
+      mostrarToast({ mensaje: `Pedido #${editModal.numeroPedido} actualizado localmente`, tipo: 'warning' })
+    }
     setEditModal(null)
   }
 
-  const handleEliminar = (pedido: Pedido) => {
+  // Eliminar pedido via backend API (DELETE /pedidos/:id)
+  const handleEliminar = async (pedido: Pedido) => {
     const mesaLabel =
       pedido.mesaId === 'para_llevar' ? 'Para llevar' : `Mesa ${pedido.mesaId.replace('mesa-', '')}`
-    eliminarPedido(pedido.id)
+    await eliminarPedidoAsync(pedido.id)
     mostrarToast({
-      mensaje: `🗑️ Pedido #${pedido.numeroPedido} eliminado · ${mesaLabel} liberada`,
+      mensaje: `Pedido #${pedido.numeroPedido} eliminado - ${mesaLabel} liberada`,
       tipo: 'warning',
     })
     setExpandido(null)

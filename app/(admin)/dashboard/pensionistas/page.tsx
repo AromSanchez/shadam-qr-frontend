@@ -109,6 +109,12 @@ export default function PensionistasPage() {
   const [newName, setNewName] = useState("");
   const [newDni, setNewDni] = useState("");
 
+  // Recharge dialog state
+  const [rechargeOpen, setRechargeOpen] = useState(false);
+  const [rechargePensionista, setRechargePensionista] = useState<Pensionista | null>(null);
+  const [rechargeAmount, setRechargeAmount] = useState("");
+  const [recharging, setRecharging] = useState(false);
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -190,7 +196,7 @@ export default function PensionistasPage() {
       const json = await res.json();
 
       if (!res.ok) {
-        toast.error(getErrorMessage(json, "Aun no se pudo cambiar el estado desde el backend"));
+        toast.error(getErrorMessage(json, "No se pudo cambiar el estado"));
         return;
       }
 
@@ -202,6 +208,49 @@ export default function PensionistasPage() {
       setTogglingId(null);
     }
   };
+
+  const openRecharge = (p: Pensionista) => {
+    setRechargePensionista(p);
+    setRechargeAmount("");
+    setRechargeOpen(true);
+  };
+
+  const handleRecharge = async () => {
+    if (!rechargePensionista) return;
+    const amount = parseFloat(rechargeAmount);
+    if (!amount || amount <= 0) {
+      toast.error("Ingresa un monto valido mayor a 0");
+      return;
+    }
+
+    try {
+      setRecharging(true);
+      const res = await fetch(`/api/proxy?path=${encodeURIComponent(`/users/${rechargePensionista.id}/balance`)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
+      const json = await res.json();
+
+      if (!res.ok) {
+        toast.error(getErrorMessage(json, "No se pudo recargar el saldo"));
+        return;
+      }
+
+      toast.success(`Saldo recargado: +S/ ${amount.toFixed(2)} a ${rechargePensionista.name}`);
+      setRechargeOpen(false);
+      setRechargePensionista(null);
+      setRechargeAmount("");
+      await fetchData();
+    } catch {
+      toast.error("Error de conexion al recargar saldo");
+    } finally {
+      setRecharging(false);
+    }
+  };
+
+  // Quick amount chips for recharge
+  const rechargeChips = [10, 20, 30, 50, 100];
 
   return (
     <>
@@ -292,6 +341,7 @@ export default function PensionistasPage() {
             />
           </div>
 
+          {/* MOBILE CARDS */}
           <div className="flex flex-col gap-3 md:hidden">
             {loading && (
               <p className="text-sm text-muted-foreground text-center py-8">Cargando pensionistas...</p>
@@ -324,7 +374,7 @@ export default function PensionistasPage() {
 
                     <div className="grid grid-cols-3 border-t border-border">
                       <button
-                        onClick={() => toast.info("Recargas proximamente")}
+                        onClick={() => openRecharge(p)}
                         className="flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-[#06b6d4] hover:bg-primary/10 transition-colors border-r border-border"
                       >
                         <RefreshCw size={13} /> Recargar
@@ -349,6 +399,7 @@ export default function PensionistasPage() {
               })}
           </div>
 
+          {/* DESKTOP TABLE */}
           <div className="hidden md:block bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
             <div className="px-5 py-3.5 bg-muted/40 border-b border-border">
               <span className="text-xs font-bold uppercase tracking-widest text-[#06b6d4]">
@@ -420,7 +471,7 @@ export default function PensionistasPage() {
                               variant="outline"
                               size="sm"
                               className="gap-1.5 h-8 text-xs border-[#06b6d4] text-[#06b6d4] hover:bg-primary/10 hover:text-[#06b6d4]"
-                              onClick={() => toast.info("Recargas proximamente")}
+                              onClick={() => openRecharge(p)}
                             >
                               <RefreshCw size={12} /> Recargar
                             </Button>
@@ -458,6 +509,79 @@ export default function PensionistasPage() {
           </div>
         </div>
       </div>
+
+      {/* RECHARGE DIALOG */}
+      <Dialog open={rechargeOpen} onOpenChange={setRechargeOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[#06b6d4]">Recargar saldo</DialogTitle>
+          </DialogHeader>
+          {rechargePensionista && (
+            <div className="space-y-4 pt-1">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border">
+                <Initials name={rechargePensionista.name} size="md" />
+                <div>
+                  <p className="font-semibold text-foreground text-sm">{rechargePensionista.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Saldo actual: <span className="font-mono font-bold">{formatCurrency(rechargePensionista.balance)}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold text-foreground">Monto a recargar (S/)</Label>
+                <Input
+                  value={rechargeAmount}
+                  onChange={(e) => setRechargeAmount(e.target.value)}
+                  placeholder="0.00"
+                  type="number"
+                  min="1"
+                  step="0.50"
+                  inputMode="decimal"
+                  className="text-lg font-mono font-bold focus-visible:ring-[#06b6d4] focus-visible:border-[#06b6d4]"
+                />
+              </div>
+
+              {/* Quick amount chips */}
+              <div className="flex flex-wrap gap-2">
+                {rechargeChips.map((chip) => (
+                  <button
+                    key={chip}
+                    onClick={() => setRechargeAmount(String(chip))}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                      rechargeAmount === String(chip)
+                        ? "bg-[#06b6d4] text-white border-[#06b6d4]"
+                        : "bg-muted/50 text-foreground border-border hover:border-[#06b6d4]"
+                    }`}
+                  >
+                    S/ {chip}
+                  </button>
+                ))}
+              </div>
+
+              {/* Preview new balance */}
+              {parseFloat(rechargeAmount) > 0 && (
+                <div className="p-3 rounded-xl bg-green-50 border border-green-200">
+                  <p className="text-xs text-green-700 font-medium">Nuevo saldo despues de recarga:</p>
+                  <p className="text-lg font-mono font-bold text-green-700">
+                    {formatCurrency(Number(rechargePensionista.balance) + parseFloat(rechargeAmount))}
+                  </p>
+                </div>
+              )}
+
+              <Button
+                onClick={handleRecharge}
+                disabled={recharging || !parseFloat(rechargeAmount)}
+                className="w-full bg-[#06b6d4] hover:bg-primary/90 text-white gap-2"
+              >
+                {recharging && <Loader2 size={14} className="animate-spin" />}
+                <Wallet size={14} />
+                Confirmar recarga
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

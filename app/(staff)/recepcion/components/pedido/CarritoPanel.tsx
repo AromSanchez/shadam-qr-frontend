@@ -11,6 +11,7 @@ interface CarritoPanelProps {
   tipoCliente: TipoCliente
   saldoPensionista?: number
   confirmLabel?: string
+  disabled?: boolean
   onQuitarItem: (itemId: string) => void
   onToggleParaLlevar: (itemId: string) => void
   onCancelar: () => void
@@ -23,6 +24,7 @@ export default function CarritoPanel({
   tipoCliente,
   saldoPensionista,
   confirmLabel,
+  disabled,
   onQuitarItem,
   onToggleParaLlevar,
   onCancelar,
@@ -268,10 +270,10 @@ export default function CarritoPanel({
           </button>
           <button
             onClick={onConfirmar}
-            disabled={items.length === 0}
+            disabled={items.length === 0 || disabled}
             className="pos-btn pos-btn-primary flex-1 h-[52px] rounded-2xl text-white font-heading font-bold text-sm tracking-wide transition-all duration-150 active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
-              boxShadow: items.length > 0 ? 'var(--pos-shadow-cyan)' : 'none',
+              boxShadow: items.length > 0 && !disabled ? 'var(--pos-shadow-cyan)' : 'none',
             }}
           >
             <CheckCircle size={17} className="inline-block mr-1.5 -mt-0.5" />

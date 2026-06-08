@@ -17,9 +17,9 @@ interface GrillaProductosProps {
 }
 
 const categoriasOrden: Record<ModoPension, CategoriaProducto[]> = {
-  desayuno: ['bebida', 'acompañamiento', 'caldo'],
-  almuerzo: ['refresco', 'entrada', 'segundo'],
-  cena: ['sopa', 'infusion', 'plato_ligero'],
+  desayuno: ['bebida', 'acompañamiento', 'caldo', 'entrada', 'segundo'],
+  almuerzo: ['refresco', 'entrada', 'segundo', 'sopa'],
+  cena: ['sopa', 'infusion', 'plato_ligero', 'entrada', 'segundo'],
 }
 
 export default function GrillaProductos({
