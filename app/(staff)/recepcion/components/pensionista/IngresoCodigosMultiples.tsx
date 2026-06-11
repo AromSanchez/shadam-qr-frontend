@@ -34,9 +34,14 @@ function detectMealType(): MealType | null {
   const minutes = now.getMinutes()
   const totalMinutes = hours * 60 + minutes
 
-  if (totalMinutes >= 360 && totalMinutes < 600) return 'DESAYUNO'    // 6:00 - 10:00
-  if (totalMinutes >= 690 && totalMinutes < 900) return 'ALMUERZO'    // 11:30 - 15:00
-  if (totalMinutes >= 1050 && totalMinutes < 1260) return 'CENA'      // 17:30 - 21:00
+  // Sin huecos: siempre hay un turno activo
+  // 5:00 - 10:59 → DESAYUNO
+  // 11:00 - 16:59 → ALMUERZO
+  // 17:00 - 21:59 → CENA
+  // 22:00 - 4:59 → null (madrugada, fuera de servicio)
+  if (totalMinutes >= 300 && totalMinutes < 660) return 'DESAYUNO'   // 5:00 - 10:59
+  if (totalMinutes >= 660 && totalMinutes < 1020) return 'ALMUERZO'  // 11:00 - 16:59
+  if (totalMinutes >= 1020 && totalMinutes < 1320) return 'CENA'     // 17:00 - 21:59
   return null
 }
 
