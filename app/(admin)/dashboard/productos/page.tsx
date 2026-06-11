@@ -59,6 +59,13 @@ export default function ProductosPage() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  /* ─── Edit state ─── */
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editFormData, setEditFormData] = useState({ ...EMPTY_FORM });
+  const [editUploading, setEditUploading] = useState(false);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+
   /* ─────────────── fetch ─────────────── */
   const fetchData = async () => {
     try {
@@ -143,13 +150,93 @@ export default function ProductosPage() {
 
   /* ─────────────── eliminar ─────────────── */
   const handleDeleteProduct = async (id: string) => {
-    if (!confirm("¿Eliminar este producto?")) return;
+    if (!confirm("¿Eliminar este producto? Se eliminará también de los menús.")) return;
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
       if (res.ok) { toast.success("Producto eliminado"); fetchData(); }
       else toast.error("Error al eliminar");
     } catch {
       toast.error("Error de conexión");
+    }
+  };
+
+  /* ─────────────── editar ─────────────── */
+  const handleEditImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("La imagen no debe superar 5 MB");
+      return;
+    }
+    const preview = URL.createObjectURL(file);
+    setEditFormData(prev => ({ ...prev, imageFile: file, imagePreview: preview }));
+  };
+
+  const removeEditImage = () => {
+    setEditFormData(prev => ({ ...prev, imageFile: null, imagePreview: "" }));
+    if (editFileInputRef.current) editFileInputRef.current.value = "";
+  };
+
+  const openEditDialog = (product: Product) => {
+    setEditingProduct(product);
+    setEditFormData({
+      name: product.name,
+      description: product.description,
+      price: product.price > 0 ? String(product.price) : "",
+      categoryId: product.categoryId,
+      imageFile: null,
+      imagePreview: product.image || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    const isEntradaEdit = editFormData.categoryId === "entrada";
+
+    if (!editFormData.name.trim() || !editFormData.categoryId) {
+      toast.error("Completa los campos obligatorios");
+      return;
+    }
+    if (!isEntradaEdit && (!editFormData.price || Number(editFormData.price) < 0)) {
+      toast.error("El precio debe ser un número positivo");
+      return;
+    }
+
+    try {
+      setEditUploading(true);
+
+      const prodForm = new FormData();
+      prodForm.append("name", editFormData.name.trim());
+      prodForm.append("description", editFormData.description.trim());
+      prodForm.append("price", isEntradaEdit ? "0" : editFormData.price);
+      prodForm.append("categoryId", editFormData.categoryId);
+
+      if (editFormData.imageFile) {
+        prodForm.append("imagen", editFormData.imageFile);
+      }
+
+      const res = await fetch(`/api/products/${editingProduct.id}`, {
+        method: "PUT",
+        body: prodForm,
+      });
+
+      if (res.ok) {
+        toast.success("Producto actualizado correctamente");
+        setIsEditDialogOpen(false);
+        setEditingProduct(null);
+        setEditFormData({ ...EMPTY_FORM });
+        fetchData();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Error al actualizar el producto");
+      }
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
+      setEditUploading(false);
     }
   };
 
@@ -381,6 +468,12 @@ export default function ProductosPage() {
                     <Eye size={13} /> Ver Detalle
                   </button>
                   <button
+                    onClick={() => openEditDialog(p)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Edit size={13} /> Editar
+                  </button>
+                  <button
                     onClick={() => handleDeleteProduct(p.id)}
                     className="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                   >
@@ -459,7 +552,12 @@ export default function ProductosPage() {
                         >
                           <Eye size={16} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          onClick={() => openEditDialog(p)}
+                        >
                           <Edit size={16} />
                         </Button>
                         <Button
@@ -566,6 +664,144 @@ export default function ProductosPage() {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* ──── DIALOG EDITAR PRODUCTO ──── */}
+        <Dialog open={isEditDialogOpen} onOpenChange={(v) => {
+          setIsEditDialogOpen(v);
+          if (!v) {
+            setEditingProduct(null);
+            setEditFormData({ ...EMPTY_FORM });
+          }
+        }}>
+          <DialogContent className="max-w-md bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="text-primary">Editar Producto</DialogTitle>
+            </DialogHeader>
+
+            <form onSubmit={handleEditProduct} className="space-y-4 pt-2">
+
+              {/* ── Zona de imagen ── */}
+              <div className="space-y-1.5">
+                <Label>Imagen del producto</Label>
+                <input
+                  ref={editFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleEditImageSelect}
+                />
+                {editFormData.imagePreview ? (
+                  <div className="relative w-full h-40 rounded-xl overflow-hidden border border-border group">
+                    <img
+                      src={editFormData.imagePreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => editFileInputRef.current?.click()}
+                        className="bg-white/90 text-foreground text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-white transition-colors"
+                      >
+                        Cambiar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={removeEditImage}
+                        className="bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1"
+                      >
+                        <X size={12} /> Quitar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => editFileInputRef.current?.click()}
+                    className={cn(
+                      "w-full h-36 rounded-xl border-2 border-dashed border-border",
+                      "flex flex-col items-center justify-center gap-2",
+                      "text-muted-foreground hover:text-primary hover:border-primary",
+                      "transition-colors cursor-pointer"
+                    )}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <ImagePlus size={20} />
+                    </div>
+                    <span className="text-sm font-medium">Haz clic para subir imagen</span>
+                    <span className="text-[11px]">PNG, JPG o WEBP - máx 5 MB</span>
+                  </button>
+                )}
+              </div>
+
+              {/* ── Nombre ── */}
+              <div className="space-y-1.5">
+                <Label>Nombre del plato / bebida <span className="text-destructive">*</span></Label>
+                <Input
+                  value={editFormData.name}
+                  onChange={e => setEditFormData({ ...editFormData, name: e.target.value })}
+                  placeholder="Ej. Ceviche de Pescado"
+                />
+              </div>
+
+              {/* ── Categoría + Precio ── */}
+              <div className={cn("grid gap-4", editFormData.categoryId === "entrada" ? "grid-cols-1" : "grid-cols-2")}>
+                <div className="space-y-1.5">
+                  <Label>Categoría <span className="text-destructive">*</span></Label>
+                  <select
+                    className="w-full bg-card border border-border rounded-lg p-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    value={editFormData.categoryId}
+                    onChange={e => setEditFormData({ ...editFormData, categoryId: e.target.value, price: "" })}
+                  >
+                    <option value="">Seleccionar...</option>
+                    {STATIC_CATEGORIES.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {editFormData.categoryId !== "entrada" && (
+                  <div className="space-y-1.5">
+                    <Label>Precio (S/) <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editFormData.price}
+                      onChange={e => setEditFormData({ ...editFormData, price: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  </div>
+                )}
+
+                {editFormData.categoryId === "entrada" && (
+                  <p className="text-[11px] text-muted-foreground bg-muted/50 rounded-lg px-3 py-2 border border-border">
+                    Las entradas son gratuitas, no requieren precio.
+                  </p>
+                )}
+              </div>
+
+              {/* ── Descripción ── */}
+              <div className="space-y-1.5">
+                <Label>Descripción</Label>
+                <textarea
+                  className="w-full bg-card border border-border rounded-lg p-2 text-sm text-foreground min-h-[72px] resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  value={editFormData.description}
+                  onChange={e => setEditFormData({ ...editFormData, description: e.target.value })}
+                  placeholder="Breve descripción del producto..."
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={editUploading}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-2"
+              >
+                {editUploading ? "Guardando..." : "Actualizar Producto"}
+              </Button>
+            </form>
           </DialogContent>
         </Dialog>
       </div>

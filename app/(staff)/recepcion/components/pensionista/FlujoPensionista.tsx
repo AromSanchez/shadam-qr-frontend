@@ -1,6 +1,6 @@
 'use client'
 
-import { QrCode, Keyboard, ArrowLeft, ChevronRight, ShoppingBag } from 'lucide-react'
+import { QrCode, Keyboard, ArrowLeft, ChevronRight } from 'lucide-react'
 
 interface FlujoPensionistaProps {
   mesaNumero: string
@@ -10,8 +10,6 @@ interface FlujoPensionistaProps {
 }
 
 export default function FlujoPensionista({ mesaNumero, onQR, onCodigos, onVolver }: FlujoPensionistaProps) {
-  const esPararLlevar = mesaNumero === 'Para llevar'
-
   return (
     <div className="flex flex-col h-full animate-fade-in" style={{ backgroundColor: 'var(--pos-bg)' }}>
       {/* Header */}
@@ -35,7 +33,7 @@ export default function FlujoPensionista({ mesaNumero, onQR, onCodigos, onVolver
             Pensionista
           </h2>
           <p className="text-xs" style={{ color: 'var(--pos-text-muted)' }}>
-            {esPararLlevar ? 'Para llevar' : `Mesa ${mesaNumero}`}
+            Registrar consumo de comida
           </p>
         </div>
       </div>
@@ -50,7 +48,7 @@ export default function FlujoPensionista({ mesaNumero, onQR, onCodigos, onVolver
             Identificar pensionista
           </h3>
           <p className="text-xs" style={{ color: 'var(--pos-text-muted)' }}>
-            Selecciona el método de identificación
+            Selecciona el metodo de identificacion
           </p>
         </div>
 
@@ -94,7 +92,7 @@ export default function FlujoPensionista({ mesaNumero, onQR, onCodigos, onVolver
               Escanear QR
             </p>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--pos-text-muted)' }}>
-              Para clientes con carnet digital
+              Usa la camara para escanear el codigo QR del pensionista
             </p>
           </div>
 
@@ -141,10 +139,10 @@ export default function FlujoPensionista({ mesaNumero, onQR, onCodigos, onVolver
               className="font-heading font-semibold text-sm mb-0.5"
               style={{ color: 'var(--pos-text)' }}
             >
-              Ingresar código
+              Ingresar codigo
             </p>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--pos-text-muted)' }}>
-              Para ingresar manualmente
+              Escribe el codigo PEN-XXXXX manualmente para registrar multiples pensionistas
             </p>
           </div>
 

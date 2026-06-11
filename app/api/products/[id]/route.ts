@@ -62,31 +62,59 @@ export async function DELETE(
   }
 }
 
-// PUT /api/products/[id]
+// PUT /api/products/[id] - supports both JSON and form-data
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    const contentType = request.headers.get("content-type") || "";
 
-    // Map frontend fields back to backend naming
-    const payload: Record<string, any> = {};
-    if (body.name !== undefined) payload.nombre = body.name;
-    if (body.description !== undefined) payload.descripcion = body.description;
-    if (body.price !== undefined) payload.precio = String(body.price);
-    if (body.categoryId !== undefined) payload.categoria = body.categoryId.toUpperCase();
+    let backendRes: Response;
 
-    // Note: since PUT in backend isn't documented to support multipart/form-data directly or is not yet implemented,
-    // we send JSON payload for PUT.
-    const backendRes = await fetch(`${BACKEND_URL}/productos/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    if (contentType.includes("multipart/form-data")) {
+      // Forward form-data directly to backend (supports image upload)
+      const formData = await request.formData();
+
+      // Build a new FormData with backend field names
+      const backendForm = new FormData();
+      const name = formData.get("name");
+      const description = formData.get("description");
+      const price = formData.get("price");
+      const categoryId = formData.get("categoryId");
+      const imagen = formData.get("imagen");
+
+      if (name) backendForm.append("nombre", name as string);
+      if (description !== null) backendForm.append("descripcion", description as string);
+      if (price) backendForm.append("precio", price as string);
+      if (categoryId) backendForm.append("categoria", (categoryId as string).toUpperCase());
+      if (imagen && imagen instanceof File && imagen.size > 0) {
+        backendForm.append("imagen", imagen);
+      }
+
+      backendRes = await fetch(`${BACKEND_URL}/productos/${id}`, {
+        method: "PATCH",
+        body: backendForm,
+      });
+    } else {
+      // JSON payload
+      const body = await request.json();
+
+      const payload: Record<string, any> = {};
+      if (body.name !== undefined) payload.nombre = body.name;
+      if (body.description !== undefined) payload.descripcion = body.description;
+      if (body.price !== undefined) payload.precio = String(body.price);
+      if (body.categoryId !== undefined) payload.categoria = body.categoryId.toUpperCase();
+
+      backendRes = await fetch(`${BACKEND_URL}/productos/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+    }
 
     if (!backendRes.ok) {
       return NextResponse.json({ error: "Product not found or update failed" }, { status: backendRes.status });

@@ -1,12 +1,24 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
-import { ArrowLeft, Search, UserPlus, X, Check, ChevronDown, ChevronUp } from 'lucide-react'
-import type { Pensionista, TipoCliente, ItemPedido, Extra } from '../../lib/types'
-import { pensionistasMock } from '../../lib/mock-data'
-import { formatearPrecio } from '../../lib/utils'
-import { usePosContext } from '../../context/PosContext'
-import PantallaPedido from '../pedido/PantallaPedido'
+import { useState, useCallback } from 'react'
+import { ArrowLeft, Search, Loader2, CheckCircle, AlertTriangle, User, Coffee, UtensilsCrossed, Moon, RotateCcw, Clock } from 'lucide-react'
+
+interface PensionistaInfo {
+  id: number
+  name: string
+  email: string
+  pensioner_type: string
+  balance: number
+  is_active: boolean
+  qr_token: string
+  todayConsumptions: string[]
+}
+
+interface RegisteredEntry {
+  pensionista: PensionistaInfo
+  mealType: string
+  time: string
+}
 
 interface IngresoCodigosMultiplesProps {
   mesaId: string
@@ -14,131 +26,169 @@ interface IngresoCodigosMultiplesProps {
   onVolver: () => void
 }
 
-/** Extended local state per pensionista — tracks their collected items */
-interface PensionistaLocal extends Pensionista {
-  itemsPedido: ItemPedido[]
-  extras: Extra[]
-  totalIndividual: number
+type MealType = 'DESAYUNO' | 'ALMUERZO' | 'CENA'
+
+function detectMealType(): MealType | null {
+  const now = new Date()
+  const hours = now.getHours()
+  const minutes = now.getMinutes()
+  const totalMinutes = hours * 60 + minutes
+
+  if (totalMinutes >= 360 && totalMinutes < 600) return 'DESAYUNO'    // 6:00 - 10:00
+  if (totalMinutes >= 690 && totalMinutes < 900) return 'ALMUERZO'    // 11:30 - 15:00
+  if (totalMinutes >= 1050 && totalMinutes < 1260) return 'CENA'      // 17:30 - 21:00
+  return null
+}
+
+function getMealLabel(meal: MealType | string): string {
+  const labels: Record<string, string> = {
+    DESAYUNO: 'Desayuno',
+    ALMUERZO: 'Almuerzo',
+    CENA: 'Cena',
+  }
+  return labels[meal] || meal
+}
+
+function getMealIcon(meal: MealType) {
+  if (meal === 'DESAYUNO') return <Coffee size={14} />
+  if (meal === 'ALMUERZO') return <UtensilsCrossed size={14} />
+  return <Moon size={14} />
 }
 
 export default function IngresoCodigosMultiples({ mesaId, onTodosConfirmados, onVolver }: IngresoCodigosMultiplesProps) {
-  const { crearPedido, mostrarToast, state } = usePosContext()
-  const [pensionistas, setPensionistas] = useState<PensionistaLocal[]>([])
-  const [codigoActual, setCodigoActual] = useState('')
-  const [error, setError] = useState('')
-  const [pensionistaActivo, setPensionistaActivo] = useState<PensionistaLocal | null>(null)
-  const [expandido, setExpandido] = useState<string | null>(null)
+  const [code, setCode] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [registering, setRegistering] = useState(false)
+  const [pensionista, setPensionista] = useState<PensionistaInfo | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [registeredToday, setRegisteredToday] = useState<RegisteredEntry[]>([])
 
-  const agregarCodigo = useCallback(() => {
-    if (!codigoActual.trim()) return
-    setError('')
+  const currentMeal = detectMealType()
 
-    const found = pensionistasMock.find((p) => p.codigo.toLowerCase() === codigoActual.trim().toLowerCase())
-    if (!found) {
-      setError(`❌ Pensionista no encontrado: "${codigoActual}"`)
-      mostrarToast({ mensaje: `Código "${codigoActual}" no encontrado`, tipo: 'error' })
-      return
+  // Validate QR code
+  const handleSubmit = useCallback(async () => {
+    const trimmed = code.trim().toUpperCase()
+    if (!trimmed) return
+
+    setLoading(true)
+    setErrorMessage(null)
+    setSuccessMessage(null)
+    setPensionista(null)
+
+    try {
+      const res = await fetch('/api/proxy?path=/consumptions/validate-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qrToken: trimmed }),
+        credentials: 'include',
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || `Error ${res.status}: Codigo no valido`)
+      }
+      const data: PensionistaInfo = await res.json()
+      setPensionista(data)
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error al validar el codigo')
+    } finally {
+      setLoading(false)
     }
-    if (pensionistas.some((p) => p.id === found.id)) {
-      setError('Ya fue agregado')
-      return
+  }, [code])
+
+  // Register consumption
+  const registerConsumption = useCallback(async () => {
+    if (!pensionista || !currentMeal) return
+
+    setRegistering(true)
+    setErrorMessage(null)
+
+    try {
+      const res = await fetch('/api/proxy?path=/consumptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: pensionista.id, mealType: currentMeal }),
+        credentials: 'include',
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || `Error ${res.status}: No se pudo registrar`)
+      }
+      const data = await res.json()
+
+      // Add to registered list
+      const now = new Date()
+      setRegisteredToday(prev => [
+        {
+          pensionista,
+          mealType: currentMeal,
+          time: now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
+        },
+        ...prev,
+      ])
+
+      setSuccessMessage(data.message || `${getMealLabel(currentMeal)} registrado para ${pensionista.name}`)
+
+      // Reset for next entry after a brief moment
+      setTimeout(() => {
+        setPensionista(null)
+        setSuccessMessage(null)
+        setCode('')
+      }, 2000)
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error al registrar el consumo')
+    } finally {
+      setRegistering(false)
     }
-    setPensionistas((prev) => [
-      ...prev,
-      { ...found, pedidoConfirmado: false, itemsPedido: [], extras: [], totalIndividual: 0 },
-    ])
-    setCodigoActual('')
-  }, [codigoActual, pensionistas, mostrarToast])
+  }, [pensionista, currentMeal])
 
-  const remover = useCallback((id: string) => {
-    setPensionistas((prev) => prev.filter((p) => p.id !== id))
-  }, [])
-
-  /** Receives items from PantallaPedido in collect mode (no pedido created yet) */
-  const handleItemsReady = useCallback((items: ItemPedido[], extras: Extra[], total: number) => {
-    if (!pensionistaActivo) return
-    setPensionistas((prev) =>
-      prev.map((p) =>
-        p.id === pensionistaActivo.id
-          ? { ...p, pedidoConfirmado: true, itemsPedido: items, extras, totalIndividual: total }
-          : p
-      )
-    )
-    mostrarToast({ mensaje: `📋 Pedido de ${pensionistaActivo.nombre} agregado`, tipo: 'success' })
-    setPensionistaActivo(null)
-  }, [pensionistaActivo, mostrarToast])
-
-  const todosConfirmados = pensionistas.length > 0 && pensionistas.every((p) => p.pedidoConfirmado)
-
-  const totalGlobal = useMemo(
-    () => pensionistas.reduce((sum, p) => sum + p.totalIndividual, 0),
-    [pensionistas]
-  )
-
-  /** Creates ONE pedido with all pensionistas bundled */
-  const handleConfirmarTodos = useCallback(() => {
-    const mesa = state.mesas.find((m) => m.id === mesaId)
-    const mesasUnidas = mesa?.unidaCon || []
-
-    // Collect all items into a flat list for the pedido root
-    const allItems = pensionistas.flatMap((p) => p.itemsPedido)
-    const allExtras = pensionistas.flatMap((p) => p.extras)
-
-    crearPedido({
-      mesaId,
-      mesasUnidas,
-      items: allItems,
-      extras: allExtras,
-      total: totalGlobal,
-      modo: state.modoActual,
-      tipo: 'pensionista_codigo' as TipoCliente,
-      pensionistas: pensionistas.map((p) => ({
-        id: p.id,
-        codigo: p.codigo,
-        nombre: p.nombre,
-        tipo: p.tipo,
-        saldo: p.saldo,
-        pedidoConfirmado: true,
-        itemsPedido: p.itemsPedido,
-        extras: p.extras,
-      })),
-      estado: 'activo',
-    })
-
-    mostrarToast({ mensaje: `✅ ${pensionistas.length} pedidos registrados en grupo`, tipo: 'success' })
-    onTodosConfirmados()
-  }, [pensionistas, totalGlobal, mesaId, state, crearPedido, mostrarToast, onTodosConfirmados])
-
-  // ── Active pensionista order screen ──
-  if (pensionistaActivo) {
-    return (
-      <PantallaPedido
-        mesaId={mesaId}
-        tipoCliente={'pensionista_codigo' as TipoCliente}
-        pensionista={pensionistaActivo}
-        onVolver={() => setPensionistaActivo(null)}
-        onPedidoConfirmado={() => setPensionistaActivo(null)}
-        onItemsReady={handleItemsReady}
-      />
-    )
+  // Reset current pensionista
+  const handleReset = () => {
+    setPensionista(null)
+    setSuccessMessage(null)
+    setErrorMessage(null)
+    setCode('')
   }
 
-  // ── Main: code input + pensionista cards ──
+  const alreadyConsumed = pensionista && currentMeal && pensionista.todayConsumptions.includes(currentMeal)
+
   return (
     <div className="flex flex-col h-full animate-fade-in" style={{ backgroundColor: 'var(--pos-bg)' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 p-4" style={{ borderBottom: '1px solid var(--pos-border)', backgroundColor: 'var(--pos-card)' }}>
-        <button onClick={onVolver} className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ border: '1px solid var(--pos-border)', color: 'var(--pos-text)' }}>
+      <div
+        className="flex items-center gap-3 px-4 py-3 shrink-0"
+        style={{
+          borderBottom: '1px solid var(--pos-border)',
+          backgroundColor: 'var(--pos-card)',
+          boxShadow: 'var(--pos-shadow-sm)',
+        }}
+      >
+        <button
+          onClick={onVolver}
+          className="touch-target w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 hover:opacity-75 active:scale-[0.95]"
+          style={{ border: '1px solid var(--pos-border)', color: 'var(--pos-text-2)' }}
+        >
           <ArrowLeft size={18} />
         </button>
-        <div>
-          <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--pos-text)' }}>Ingresar códigos</h2>
+        <div className="flex-1">
+          <h2 className="font-heading text-base font-bold leading-tight" style={{ color: 'var(--pos-text)' }}>
+            Ingresar codigo
+          </h2>
           <p className="text-xs" style={{ color: 'var(--pos-text-muted)' }}>
-            Mesa {state.mesas.find((m) => m.id === mesaId)?.numero ?? mesaId}
+            {currentMeal ? `${getMealLabel(currentMeal)} - Registro manual` : 'Fuera de horario de comidas'}
           </p>
         </div>
+        {registeredToday.length > 0 && (
+          <span
+            className="text-xs font-bold px-2.5 py-1 rounded-full"
+            style={{ backgroundColor: 'var(--pos-success-bg)', color: 'var(--pos-success)' }}
+          >
+            {registeredToday.length} hoy
+          </span>
+        )}
       </div>
 
+      {/* Content */}
       <div className="flex-1 p-4 space-y-4 overflow-y-auto">
         {/* Code input */}
         <div className="flex gap-2">
@@ -146,143 +196,262 @@ export default function IngresoCodigosMultiples({ mesaId, onTodosConfirmados, on
             <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'var(--pos-text-muted)' }} />
             <input
               type="text"
-              value={codigoActual}
-              onChange={(e) => { setCodigoActual(e.target.value); setError('') }}
-              onKeyDown={(e) => e.key === 'Enter' && agregarCodigo()}
-              placeholder="Ej: ESC001, EXT002..."
-              className="w-full h-12 pl-10 pr-4 rounded-xl text-sm outline-none"
-              style={{ backgroundColor: 'var(--pos-card)', border: '1px solid var(--pos-border)', color: 'var(--pos-text)' }}
+              value={code}
+              onChange={(e) => { setCode(e.target.value.toUpperCase()); setErrorMessage(null) }}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              placeholder="PEN-XXXXX"
+              className="w-full h-12 pl-10 pr-4 rounded-xl text-sm outline-none font-mono tracking-wider"
+              style={{
+                backgroundColor: 'var(--pos-card)',
+                border: '1px solid var(--pos-border)',
+                color: 'var(--pos-text)',
+              }}
+              disabled={!!pensionista}
+              autoFocus
             />
           </div>
-          <button onClick={agregarCodigo} className="h-12 px-5 rounded-xl text-white font-semibold text-sm flex items-center gap-2 transition-all active:scale-[0.98]" style={{ backgroundColor: 'var(--pos-primary)' }}>
-            <UserPlus size={16} /> Agregar
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !code.trim() || !!pensionista}
+            className="h-12 px-5 rounded-xl text-white font-semibold text-sm flex items-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+            style={{ backgroundColor: 'var(--pos-primary)' }}
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+            Buscar
           </button>
         </div>
 
-        {error && <p className="text-sm px-3 py-2 rounded-xl" style={{ backgroundColor: 'var(--pos-danger-bg)', color: 'var(--pos-danger)' }}>{error}</p>}
+        {/* Error */}
+        {errorMessage && !pensionista && (
+          <div
+            className="p-3 rounded-xl flex items-start gap-2.5"
+            style={{ backgroundColor: 'var(--pos-danger-bg)', border: '1px solid var(--pos-danger-border)' }}
+          >
+            <AlertTriangle size={15} className="shrink-0 mt-px" style={{ color: 'var(--pos-danger)' }} />
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--pos-danger)' }}>
+              {errorMessage}
+            </p>
+          </div>
+        )}
 
-        <p className="text-xs" style={{ color: 'var(--pos-text-muted)' }}>
-          Prueba: ESC001, ESC002, ESC003, EXT001, EXT002, EXT003, EXT004, ESC004
-        </p>
+        {/* Success message */}
+        {successMessage && (
+          <div
+            className="p-4 rounded-xl flex items-center gap-3 animate-fade-in"
+            style={{ backgroundColor: 'var(--pos-success-bg)', border: '1px solid var(--pos-success)' }}
+          >
+            <CheckCircle size={20} style={{ color: 'var(--pos-success)' }} />
+            <p className="text-sm font-medium" style={{ color: 'var(--pos-success)' }}>
+              {successMessage}
+            </p>
+          </div>
+        )}
 
-        {/* Pensionista cards */}
-        {pensionistas.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold" style={{ color: 'var(--pos-text-muted)' }}>
-              Pensionistas ({pensionistas.length})
-            </h3>
-            {pensionistas.map((p) => {
-              const isExpanded = expandido === p.id && p.pedidoConfirmado
-              return (
-                <div key={p.id} className="rounded-xl overflow-hidden transition-all duration-200" style={{
-                  backgroundColor: p.pedidoConfirmado ? 'var(--pos-success-bg)' : 'var(--pos-card)',
-                  border: `1.5px solid ${p.pedidoConfirmado ? 'var(--pos-success)' : 'var(--pos-border)'}`,
-                }}>
-                  {/* Card header */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => {
-                      if (p.pedidoConfirmado) {
-                        setExpandido(isExpanded ? null : p.id)
-                      } else {
-                        setPensionistaActivo(p)
-                      }
-                    }}
-                    onKeyDown={(e) => e.key === 'Enter' && !p.pedidoConfirmado && setPensionistaActivo(p)}
-                    className="w-full flex items-center justify-between p-3 cursor-pointer"
+        {/* Pensionista info card */}
+        {pensionista && !successMessage && (
+          <div
+            className="rounded-[20px] overflow-hidden animate-slide-up"
+            style={{
+              border: '1px solid var(--pos-border)',
+              boxShadow: 'var(--pos-shadow-lg)',
+              backgroundColor: 'var(--pos-card)',
+            }}
+          >
+            {/* Header gradient */}
+            <div
+              className="px-5 py-4 flex items-center gap-3"
+              style={{
+                background: pensionista.is_active
+                  ? 'linear-gradient(135deg, #0891b2 0%, #06B6D4 60%, #22d3ee 100%)'
+                  : 'linear-gradient(135deg, #374151 0%, #4B5563 100%)',
+              }}
+            >
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 text-white font-heading font-bold text-base"
+                style={{ backgroundColor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}
+              >
+                {pensionista.name
+                  .split(' ')
+                  .slice(0, 2)
+                  .map((w) => w[0])
+                  .join('')
+                  .toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-white font-heading font-bold text-sm leading-tight truncate">
+                  {pensionista.name}
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <span
+                    className="text-xs font-medium px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.95)' }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: p.pedidoConfirmado ? 'var(--pos-success)' : 'var(--pos-primary)' }}>
-                        {p.pedidoConfirmado ? <Check size={16} /> : p.nombre.charAt(0)}
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold" style={{ color: 'var(--pos-text)' }}>{p.nombre}</p>
-                        <p className="text-xs capitalize" style={{ color: 'var(--pos-text-muted)' }}>
-                          {p.tipo} · {p.codigo}
-                          {p.pedidoConfirmado && ` · ${p.itemsPedido.length} ítem${p.itemsPedido.length !== 1 ? 's' : ''}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {p.pedidoConfirmado ? (
-                        <>
-                          <span className="text-sm font-bold" style={{ color: 'var(--pos-success)' }}>
-                            {formatearPrecio(p.totalIndividual)}
-                          </span>
-                          {isExpanded ? <ChevronUp size={14} style={{ color: 'var(--pos-text-muted)' }} /> : <ChevronDown size={14} style={{ color: 'var(--pos-text-muted)' }} />}
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-sm font-bold" style={{ color: p.saldo > 0 ? 'var(--pos-success)' : 'var(--pos-danger)' }}>
-                            {formatearPrecio(p.saldo)}
-                          </span>
-                          <button onClick={(e) => { e.stopPropagation(); remover(p.id) }} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ color: 'var(--pos-danger)' }}>
-                            <X size={14} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                    {pensionista.pensioner_type}
+                  </span>
+                  <span
+                    className="text-xs font-mono px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.9)' }}
+                  >
+                    {pensionista.qr_token}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-                  {/* Expanded items list */}
-                  {isExpanded && (
-                    <div className="px-3 pb-3 animate-fade-in" style={{ borderTop: '1px solid var(--pos-border)' }}>
-                      <div className="pt-2 space-y-1">
-                        {p.itemsPedido.map((item) => (
-                          <div key={item.id} className="flex justify-between text-xs">
-                            <span style={{ color: 'var(--pos-text)' }}>
-                              {item.cantidad}× {item.producto.nombre}
-                              {item.paraLlevar && ' 🥡'}
-                            </span>
-                            <span style={{ color: 'var(--pos-text-muted)' }}>
-                              {formatearPrecio(item.producto.precioPension * item.cantidad)}
-                            </span>
-                          </div>
-                        ))}
-                        {p.extras.map((e) => (
-                          <div key={e.id} className="flex justify-between text-xs">
-                            <span style={{ color: 'var(--pos-text-muted)' }}>+ {e.descripcion}</span>
-                            <span style={{ color: 'var(--pos-warning)' }}>{formatearPrecio(e.monto)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+            {/* Info rows */}
+            <div className="px-5 py-3 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs" style={{ color: 'var(--pos-text-muted)' }}>Saldo</span>
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: pensionista.balance > 0 ? 'var(--pos-success)' : 'var(--pos-danger)' }}
+                >
+                  {pensionista.balance} comidas
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-xs" style={{ color: 'var(--pos-text-muted)' }}>Consumido hoy</span>
+                <div className="flex gap-1">
+                  {pensionista.todayConsumptions.length > 0 ? (
+                    pensionista.todayConsumptions.map((meal) => (
+                      <span
+                        key={meal}
+                        className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                        style={{ backgroundColor: 'var(--pos-primary-dim)', color: 'var(--pos-primary)' }}
+                      >
+                        {getMealLabel(meal)}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs" style={{ color: 'var(--pos-text-muted)' }}>Ninguno</span>
                   )}
                 </div>
-              )
-            })}
+              </div>
+
+              {/* Warnings */}
+              {alreadyConsumed && (
+                <div
+                  className="flex items-start gap-2 p-2.5 rounded-lg"
+                  style={{ backgroundColor: 'var(--pos-danger-bg)', border: '1px solid var(--pos-danger-border)' }}
+                >
+                  <AlertTriangle size={14} className="shrink-0 mt-px" style={{ color: 'var(--pos-danger)' }} />
+                  <p className="text-xs" style={{ color: 'var(--pos-danger)' }}>
+                    Ya registro {currentMeal && getMealLabel(currentMeal)} hoy.
+                  </p>
+                </div>
+              )}
+
+              {!pensionista.is_active && (
+                <div
+                  className="flex items-start gap-2 p-2.5 rounded-lg"
+                  style={{ backgroundColor: 'var(--pos-danger-bg)', border: '1px solid var(--pos-danger-border)' }}
+                >
+                  <AlertTriangle size={14} className="shrink-0 mt-px" style={{ color: 'var(--pos-danger)' }} />
+                  <p className="text-xs" style={{ color: 'var(--pos-danger)' }}>
+                    Cuenta no activa.
+                  </p>
+                </div>
+              )}
+
+              {!currentMeal && (
+                <div
+                  className="flex items-start gap-2 p-2.5 rounded-lg"
+                  style={{ backgroundColor: 'var(--pos-danger-bg)', border: '1px solid var(--pos-danger-border)' }}
+                >
+                  <AlertTriangle size={14} className="shrink-0 mt-px" style={{ color: 'var(--pos-danger)' }} />
+                  <p className="text-xs" style={{ color: 'var(--pos-danger)' }}>
+                    Fuera del horario de comidas.
+                  </p>
+                </div>
+              )}
+
+              {errorMessage && (
+                <div
+                  className="flex items-start gap-2 p-2.5 rounded-lg"
+                  style={{ backgroundColor: 'var(--pos-danger-bg)', border: '1px solid var(--pos-danger-border)' }}
+                >
+                  <AlertTriangle size={14} className="shrink-0 mt-px" style={{ color: 'var(--pos-danger)' }} />
+                  <p className="text-xs" style={{ color: 'var(--pos-danger)' }}>
+                    {errorMessage}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 pb-4 pt-2 flex gap-2" style={{ borderTop: '1px solid var(--pos-border)' }}>
+              <button
+                onClick={handleReset}
+                className="flex-1 h-11 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
+                style={{ border: '1px solid var(--pos-border)', color: 'var(--pos-text-muted)' }}
+              >
+                <RotateCcw size={14} />
+                Cancelar
+              </button>
+              {currentMeal && !alreadyConsumed && pensionista.is_active && (
+                <button
+                  onClick={registerConsumption}
+                  disabled={registering}
+                  className="flex-[2] h-11 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--pos-primary)', boxShadow: 'var(--pos-shadow-cyan)' }}
+                >
+                  {registering ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Registrando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={14} />
+                      Registrar {getMealLabel(currentMeal)}
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Registered today list */}
+        {registeredToday.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold flex items-center gap-1.5" style={{ color: 'var(--pos-text-muted)' }}>
+              <Clock size={12} />
+              Registrados hoy ({registeredToday.length})
+            </h3>
+            <div className="space-y-1.5">
+              {registeredToday.map((entry, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-3 rounded-xl"
+                  style={{ backgroundColor: 'var(--pos-success-bg)', border: '1px solid var(--pos-success)' }}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle size={14} style={{ color: 'var(--pos-success)' }} />
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: 'var(--pos-text)' }}>
+                        {entry.pensionista.name}
+                      </p>
+                      <p className="text-xs" style={{ color: 'var(--pos-text-muted)' }}>
+                        {entry.pensionista.pensioner_type} - {entry.pensionista.qr_token}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-medium" style={{ color: 'var(--pos-success)' }}>
+                      {getMealLabel(entry.mealType)}
+                    </p>
+                    <p className="text-[10px]" style={{ color: 'var(--pos-text-muted)' }}>
+                      {entry.time}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
-
-      {/* Bottom bar: total + confirm button */}
-      {pensionistas.length > 0 && (
-        <div className="p-4 space-y-3" style={{ borderTop: '1px solid var(--pos-border)', backgroundColor: 'var(--pos-card)' }}>
-          {/* Summary */}
-          {pensionistas.some((p) => p.pedidoConfirmado) && (
-            <div className="flex justify-between text-sm">
-              <span style={{ color: 'var(--pos-text-muted)' }}>
-                Total ({pensionistas.filter((p) => p.pedidoConfirmado).length}/{pensionistas.length} confirmados)
-              </span>
-              <span className="font-heading font-bold" style={{ color: 'var(--pos-primary)' }}>
-                {formatearPrecio(totalGlobal)}
-              </span>
-            </div>
-          )}
-
-          {/* Confirm all */}
-          {todosConfirmados && (
-            <button
-              onClick={handleConfirmarTodos}
-              className="w-full h-14 rounded-xl text-white font-heading font-bold text-base transition-all duration-150 active:scale-[0.98] shadow-md"
-              style={{ backgroundColor: 'var(--pos-success)' }}
-            >
-              ✅ Confirmar todos los pedidos ({pensionistas.length})
-            </button>
-          )}
-        </div>
-      )}
     </div>
   )
 }

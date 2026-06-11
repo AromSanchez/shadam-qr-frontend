@@ -1,186 +1,255 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, User, Shield, CreditCard, Bell, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { BottomNav } from "@/components/ui/bottom-nav";
-import { useAuth } from "@/lib/auth-context";
+import { useState } from "react";
+import { usePensioner } from "../context";
 import { motion } from "framer-motion";
+import { User, Mail, Lock, QrCode, LogOut, Moon, Sun, Save } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ThemeToggleButton } from "@/components/theme-toggle";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
-  const router = useRouter();
-  const [darkMode, setDarkMode] = useState(false);
+  const { user, loading, logout, refreshUser } = usePensioner();
+  const [editMode, setEditMode] = useState<"email" | "password" | null>(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!user || user.role !== "pensionista") {
-      router.replace("/pensionista");
-    }
-  }, [user, router]);
-
-  if (!user || user.role !== "pensionista") {
+  if (loading || !user) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-3 border-cyan-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  const profileData = {
-    name: user.name,
-    email: user.code ? `${user.code.toLowerCase()}@shadam.com` : "pensionista@shadam.com",
-    phone: "+51 999 888 777",
-    plan: user.planType || "Menú Mensual",
-    memberSince: user.startDate ? new Date(user.startDate).toLocaleDateString() : "Enero 2026",
-    id: user.dni || "1.092.384.XX",
+  const typeLabel = user.pensioner_type === "fixed" ? "Fijo" : user.pensioner_type === "variable" ? "Variable" : user.pensioner_type;
+
+  const handleSaveEmail = async () => {
+    if (!newEmail.trim()) {
+      toast.error("Ingresa un email");
+      return;
+    }
+    try {
+      setSaving(true);
+      const res = await fetch("/api/proxy?path=/users/me/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newEmail.trim() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message || "Error al actualizar email");
+        return;
+      }
+      toast.success("Email actualizado");
+      setEditMode(null);
+      setNewEmail("");
+      await refreshUser();
+    } catch {
+      toast.error("Error de conexion");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const menuItems = [
-    {
-      id: "plan",
-      label: "Mi Plan",
-      description: `${profileData.plan} — Activo`,
-      icon: CreditCard,
-      color: "text-primary bg-cyan-50 dark:bg-cyan-900/20",
-    },
-    {
-      id: "notifications",
-      label: "Notificaciones",
-      description: "Push y correo activados",
-      icon: Bell,
-      color: "text-cyan-500 bg-cyan-50 dark:bg-cyan-900/20",
-    },
-    {
-      id: "security",
-      label: "Seguridad",
-      description: "Contraseña y acceso",
-      icon: Shield,
-      color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20",
-    },
-  ];
+  const handleSavePassword = async () => {
+    if (!newPassword.trim()) {
+      toast.error("Ingresa una contrasena");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Las contrasenas no coinciden");
+      return;
+    }
+    try {
+      setSaving(true);
+      const res = await fetch("/api/proxy?path=/users/me/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword.trim() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message || "Error al actualizar contrasena");
+        return;
+      }
+      toast.success("Contrasena actualizada");
+      setEditMode(null);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch {
+      toast.error("Error de conexion");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-24">
+    <div className="px-4 pt-6 pb-4 max-w-md mx-auto">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-6 pt-6 pb-6">
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/pensionista">
-            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-              <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
-            </div>
-          </Link>
-          <h1 className="text-lg font-bold text-slate-800 dark:text-white">Mi Perfil</h1>
-          <div className="w-10 h-10" />
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center mb-6"
+      >
+        <div className="w-16 h-16 bg-cyan-50 dark:bg-cyan-950/30 rounded-full flex items-center justify-center mx-auto mb-3 border border-cyan-200 dark:border-cyan-800/30">
+          <User className="w-8 h-8 text-cyan-500" />
         </div>
-
-        {/* Avatar & Info */}
-        <div className="flex flex-col items-center">
-          <div className="relative mb-4">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-cyan-600 p-[3px] shadow-xl shadow-primary/20">
-              <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden">
-                <img src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150"} className="w-full h-full object-cover" alt="Profile avatar" />
-              </div>
-            </div>
-            <Badge
-              variant="success"
-              className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider pointer-events-none whitespace-nowrap"
-            >
-              Pensionista
-            </Badge>
-          </div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white mt-2">{profileData.name}</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{profileData.email}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Miembro desde {profileData.memberSince}</p>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">{user.name}</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{user.email}</p>
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <Badge variant="secondary">{typeLabel}</Badge>
+          <Badge variant="outline">S/ {Number(user.balance || 0).toFixed(2)}</Badge>
         </div>
-      </div>
+      </motion.div>
 
-      <main className="px-6 py-6 space-y-6">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/50 text-center">
-            <p className="text-2xl font-bold text-slate-800 dark:text-white">15</p>
-            <p className="text-[10px] font-semibold text-slate-500 uppercase">Días rest.</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/50 text-center">
-            <p className="text-2xl font-bold text-primary">S/ 45</p>
-            <p className="text-[10px] font-semibold text-slate-500 uppercase">Saldo</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/50 text-center">
-            <p className="text-2xl font-bold text-emerald-500">12</p>
-            <p className="text-[10px] font-semibold text-slate-500 uppercase">Consumos</p>
-          </div>
+      {/* User Info */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-white/10 divide-y divide-slate-100 dark:divide-white/5 mb-6"
+      >
+        <div className="flex items-center justify-between p-4">
+          <span className="text-sm text-slate-500">Nombre</span>
+          <span className="text-sm font-medium text-slate-800 dark:text-white">{user.name}</span>
         </div>
+        <div className="flex items-center justify-between p-4">
+          <span className="text-sm text-slate-500">Email</span>
+          <span className="text-sm font-medium text-slate-800 dark:text-white">{user.email}</span>
+        </div>
+        <div className="flex items-center justify-between p-4">
+          <span className="text-sm text-slate-500">Tipo</span>
+          <span className="text-sm font-medium text-slate-800 dark:text-white capitalize">{typeLabel}</span>
+        </div>
+        <div className="flex items-center justify-between p-4">
+          <span className="text-sm text-slate-500">Saldo</span>
+          <span className="text-sm font-medium text-cyan-600 dark:text-cyan-400">S/ {Number(user.balance || 0).toFixed(2)}</span>
+        </div>
+        <div className="flex items-center justify-between p-4">
+          <span className="text-sm text-slate-500">QR Token</span>
+          <span className="text-xs font-mono text-slate-600 dark:text-slate-300 truncate max-w-[150px]">{user.qr_token}</span>
+        </div>
+      </motion.div>
 
-        {/* Menu Options */}
-        <div className="space-y-3">
-          {menuItems.map((item, index) => (
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              key={item.id}
-              className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50 cursor-pointer hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.color}`}>
-                  <item.icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-slate-800 dark:text-slate-100">{item.label}</h4>
-                  <p className="text-xs text-slate-500 font-medium">{item.description}</p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-400" />
-            </motion.div>
-          ))}
+      {/* Settings Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="space-y-3 mb-6"
+      >
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Configuracion</h2>
 
-          {/* Dark Mode Toggle */}
-          <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
-                {darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-              </div>
-              <div>
-                <h4 className="font-semibold text-slate-800 dark:text-slate-100">Modo Oscuro</h4>
-                <p className="text-xs text-slate-500 font-medium">{darkMode ? "Activado" : "Desactivado"}</p>
-              </div>
-            </div>
-            <button
-              title="Alternar modo oscuro"
-              onClick={() => setDarkMode(!darkMode)}
-              className={`w-12 h-7 rounded-full transition-colors cursor-pointer ${
-                darkMode ? "bg-primary" : "bg-slate-300"
-              } relative`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform absolute top-1 ${
-                  darkMode ? "translate-x-6" : "translate-x-1"
-                }`}
+        {/* Change Email */}
+        <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-white/10 p-4">
+          {editMode === "email" ? (
+            <div className="space-y-3">
+              <input
+                type="email"
+                placeholder="Nuevo email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                className="w-full h-10 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-white/10 rounded-lg px-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
               />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveEmail}
+                  disabled={saving}
+                  className="flex-1 h-9 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-60"
+                >
+                  <Save className="w-3.5 h-3.5" /> Guardar
+                </button>
+                <button
+                  onClick={() => { setEditMode(null); setNewEmail(""); }}
+                  className="flex-1 h-9 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setEditMode("email")}
+              className="flex items-center gap-3 w-full text-left"
+            >
+              <Mail className="w-5 h-5 text-slate-400" />
+              <span className="text-sm text-slate-700 dark:text-slate-200">Cambiar email</span>
             </button>
-          </div>
+          )}
         </div>
 
-        {/* Logout */}
-        <Button
+        {/* Change Password */}
+        <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-white/10 p-4">
+          {editMode === "password" ? (
+            <div className="space-y-3">
+              <input
+                type="password"
+                placeholder="Nueva contrasena"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full h-10 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-white/10 rounded-lg px-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+              />
+              <input
+                type="password"
+                placeholder="Confirmar contrasena"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full h-10 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-white/10 rounded-lg px-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSavePassword}
+                  disabled={saving}
+                  className="flex-1 h-9 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-60"
+                >
+                  <Save className="w-3.5 h-3.5" /> Guardar
+                </button>
+                <button
+                  onClick={() => { setEditMode(null); setNewPassword(""); setConfirmPassword(""); }}
+                  className="flex-1 h-9 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setEditMode("password")}
+              className="flex items-center gap-3 w-full text-left"
+            >
+              <Lock className="w-5 h-5 text-slate-400" />
+              <span className="text-sm text-slate-700 dark:text-slate-200">Cambiar contrasena</span>
+            </button>
+          )}
+        </div>
+
+        {/* Dark Mode Toggle */}
+        <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-white/10 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Moon className="w-5 h-5 text-slate-400" />
+            <span className="text-sm text-slate-700 dark:text-slate-200">Tema oscuro</span>
+          </div>
+          <ThemeToggleButton className="w-9 h-9" />
+        </div>
+      </motion.div>
+
+      {/* Logout */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <button
           onClick={logout}
-          variant="outline"
-          className="w-full flex gap-2 text-danger border-danger/20 hover:bg-danger/5 hover:text-danger rounded-2xl h-14 font-bold cursor-pointer"
+          className="w-full h-11 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/30 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors active:scale-[0.98]"
         >
-          <LogOut className="w-5 h-5" />
-          Cerrar Sesión
-        </Button>
-
-        {/* Version */}
-        <p className="text-center text-xs text-slate-400 dark:text-slate-600">
-          Restaurante Inteligente v2.0 • ID: {profileData.id}
-        </p>
-      </main>
-
-      <BottomNav />
+          <LogOut className="w-4 h-4" />
+          Cerrar sesion
+        </button>
+      </motion.div>
     </div>
   );
 }

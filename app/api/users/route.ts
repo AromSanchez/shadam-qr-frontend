@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         name: body.name,
         dni: body.dni,
+        ...(body.pensioner_type && { pensioner_type: body.pensioner_type }),
       }),
     });
 
