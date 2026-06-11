@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,12 +19,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Download,
   FileSpreadsheet,
   History,
   Loader2,
   Plus,
   RefreshCw,
   Search,
+  Upload,
   UserCheck,
   UserX,
   Users,
@@ -34,6 +36,8 @@ import {
   Moon,
   Calendar,
   TrendingDown,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import { Label } from "@/components/ui/label";
@@ -154,6 +158,25 @@ export default function PensionistasPage() {
     totalCharged: number;
     history: Record<string, { meals: string[]; totalCharged: number }>;
   } | null>(null);
+  const [historyMovements, setHistoryMovements] = useState<Array<{
+    id: string;
+    type: "RECARGA" | "CONSUMO" | "AJUSTE";
+    amount: string | number;
+    balance: string | number;
+    description: string | null;
+    createdAt: string;
+  }>>([]);
+  const [historyTab, setHistoryTab] = useState<"movimientos" | "consumos">("movimientos");
+
+  // Import state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+  const [importResultOpen, setImportResultOpen] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    created: number;
+    errors: { row: number; dni: string; error: string }[];
+  } | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -260,24 +283,104 @@ export default function PensionistasPage() {
   const openHistory = async (p: Pensionista) => {
     setHistoryPensionista(p);
     setHistoryStats(null);
+    setHistoryMovements([]);
+    setHistoryTab("movimientos");
     setHistoryOpen(true);
     setHistoryLoading(true);
 
     try {
-      const res = await fetch(`/api/proxy?path=${encodeURIComponent(`/consumptions/user/${p.id}/stats`)}`, {
-        credentials: "include",
-      });
-      const json = await res.json();
+      const [statsRes, movRes] = await Promise.all([
+        fetch(`/api/proxy?path=${encodeURIComponent(`/consumptions/user/${p.id}/stats`)}`, { credentials: "include" }),
+        fetch(`/api/proxy?path=${encodeURIComponent(`/users/${p.id}/movements?limit=100`)}`, { credentials: "include" }),
+      ]);
 
-      if (res.ok) {
-        setHistoryStats(json);
-      } else {
-        toast.error(getErrorMessage(json, "No se pudo cargar el historial"));
-      }
+      const statsJson = await statsRes.json();
+      const movJson = await movRes.json();
+
+      if (statsRes.ok) setHistoryStats(statsJson);
+      if (movRes.ok) setHistoryMovements(movJson.movements || []);
     } catch {
       toast.error("Error de conexión al cargar historial");
     } finally {
       setHistoryLoading(false);
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      setDownloadingTemplate(true);
+      const res = await fetch("/api/users/import", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        toast.error("No se pudo descargar la plantilla");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "plantilla_pensionistas.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success("Plantilla descargada");
+    } catch {
+      toast.error("Error al descargar la plantilla");
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  };
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset the input so the same file can be selected again
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      toast.error("Solo se permiten archivos Excel (.xlsx, .xls)");
+      return;
+    }
+
+    try {
+      setImporting(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/users/import", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        toast.error(getErrorMessage(json, "Error al importar el archivo"));
+        return;
+      }
+
+      setImportResult(json);
+      setImportResultOpen(true);
+
+      if (json.created > 0) {
+        toast.success(`${json.created} pensionista(s) importado(s)`);
+        await fetchData();
+      }
+
+      if (json.errors?.length > 0) {
+        toast.warning(`${json.errors.length} error(es) en la importación`);
+      }
+    } catch {
+      toast.error("Error de conexión al importar");
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -404,14 +507,43 @@ export default function PensionistasPage() {
                       </button>
                     </div>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full gap-2 border-dashed"
-                    onClick={() => toast.info("Importacion desde Excel proximamente")}
-                  >
-                    <FileSpreadsheet size={14} /> Importar desde Excel
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 gap-2 border-dashed"
+                      disabled={downloadingTemplate}
+                      onClick={handleDownloadTemplate}
+                    >
+                      {downloadingTemplate ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Download size={14} />
+                      )}
+                      Descargar Plantilla
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 gap-2 border-dashed"
+                      disabled={importing}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {importing ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Upload size={14} />
+                      )}
+                      Importar Excel
+                    </Button>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    className="hidden"
+                    onChange={handleImportExcel}
+                  />
                   <Button
                     onClick={handleAdd}
                     disabled={creating}
@@ -712,7 +844,7 @@ export default function PensionistasPage() {
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
               <History size={18} className="text-primary" />
-              Historial de consumos
+              Historial completo
             </DialogTitle>
           </DialogHeader>
 
@@ -725,7 +857,7 @@ export default function PensionistasPage() {
                   <p className="font-semibold text-foreground text-sm truncate">{historyPensionista.name}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <TypeBadge type={historyPensionista.pensioner_type} />
-                    <span className="text-xs text-muted-foreground">DNI: {historyPensionista.email}</span>
+                    <span className="text-xs text-muted-foreground">Saldo: <span className="font-mono font-bold">{formatCurrency(historyPensionista.balance)}</span></span>
                   </div>
                 </div>
               </div>
@@ -735,95 +867,241 @@ export default function PensionistasPage() {
                   <Loader2 size={24} className="animate-spin text-primary" />
                   <p className="text-sm text-muted-foreground">Cargando historial...</p>
                 </div>
-              ) : historyStats ? (
+              ) : (
                 <>
                   {/* Stats cards */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-card border border-border rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <UtensilsCrossed size={14} className="text-primary" />
+                  {historyStats && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-card border border-border rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <UtensilsCrossed size={14} className="text-primary" />
+                          </div>
+                          <span className="text-xs font-medium text-muted-foreground">Total consumos</span>
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground">Total consumos</span>
+                        <p className="text-2xl font-bold text-foreground">{historyStats.totalConsumed}</p>
                       </div>
-                      <p className="text-2xl font-bold text-foreground">{historyStats.totalConsumed}</p>
-                    </div>
-                    <div className="bg-card border border-border rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
-                          <TrendingDown size={14} className="text-red-500" />
+                      <div className="bg-card border border-border rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                            <TrendingDown size={14} className="text-red-500" />
+                          </div>
+                          <span className="text-xs font-medium text-muted-foreground">Total cobrado</span>
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground">Total cobrado</span>
+                        <p className="text-2xl font-bold text-foreground">
+                          {formatCurrency(historyStats.totalCharged)}
+                        </p>
                       </div>
-                      <p className="text-2xl font-bold text-foreground">
-                        {formatCurrency(historyStats.totalCharged)}
-                      </p>
                     </div>
+                  )}
+
+                  {/* Tabs */}
+                  <div className="flex gap-1 p-1 bg-muted/50 rounded-lg border border-border">
+                    <button
+                      onClick={() => setHistoryTab("movimientos")}
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold transition-colors ${
+                        historyTab === "movimientos"
+                          ? "bg-card text-foreground shadow-sm border border-border"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Wallet size={12} /> Movimientos
+                    </button>
+                    <button
+                      onClick={() => setHistoryTab("consumos")}
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold transition-colors ${
+                        historyTab === "consumos"
+                          ? "bg-card text-foreground shadow-sm border border-border"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <UtensilsCrossed size={12} /> Consumos
+                    </button>
                   </div>
 
-                  {/* History by date */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar size={14} className="text-muted-foreground" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                        Detalle por día
-                      </span>
-                    </div>
-
-                    {Object.keys(historyStats.history).length === 0 ? (
-                      <div className="text-center py-8">
-                        <p className="text-sm text-muted-foreground">No hay consumos registrados</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {Object.entries(historyStats.history)
-                          .sort(([a], [b]) => b.localeCompare(a))
-                          .map(([date, dayData]) => (
-                            <div
-                              key={date}
-                              className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border hover:bg-muted/50 transition-colors"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-lg bg-card border border-border flex flex-col items-center justify-center">
-                                  <span className="text-[10px] font-bold text-primary leading-none">
-                                    {new Date(date + "T12:00:00").toLocaleDateString("es-PE", { day: "2-digit" })}
-                                  </span>
-                                  <span className="text-[9px] text-muted-foreground leading-none mt-0.5">
-                                    {new Date(date + "T12:00:00").toLocaleDateString("es-PE", { month: "short" })}
-                                  </span>
+                  {/* Tab: Movimientos de saldo */}
+                  {historyTab === "movimientos" && (
+                    <div className="space-y-2">
+                      {historyMovements.length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-sm text-muted-foreground">No hay movimientos registrados</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {historyMovements.map((mov) => {
+                            const isRecarga = mov.type === "RECARGA";
+                            const amount = Number(mov.amount);
+                            const balance = Number(mov.balance);
+                            const date = new Date(mov.createdAt);
+                            return (
+                              <div
+                                key={mov.id}
+                                className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border hover:bg-muted/50 transition-colors"
+                              >
+                                {/* Icon */}
+                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                                  isRecarga
+                                    ? "bg-green-500/10 border border-green-200/50"
+                                    : "bg-red-500/10 border border-red-200/50"
+                                }`}>
+                                  {isRecarga ? (
+                                    <RefreshCw size={14} className="text-green-600" />
+                                  ) : (
+                                    <TrendingDown size={14} className="text-red-500" />
+                                  )}
                                 </div>
-                                <div className="flex items-center gap-1.5">
-                                  {dayData.meals.includes("DESAYUNO") && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 border border-amber-200/50">
-                                      <Coffee size={10} /> Des
-                                    </span>
-                                  )}
-                                  {dayData.meals.includes("ALMUERZO") && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-500/10 text-green-600 border border-green-200/50">
-                                      <UtensilsCrossed size={10} /> Alm
-                                    </span>
-                                  )}
-                                  {dayData.meals.includes("CENA") && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 text-indigo-600 border border-indigo-200/50">
-                                      <Moon size={10} /> Cen
-                                    </span>
-                                  )}
+
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-foreground truncate">
+                                    {mov.description || (isRecarga ? "Recarga" : "Consumo")}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    {date.toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" })}
+                                    {" · "}
+                                    {date.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}
+                                  </p>
+                                </div>
+
+                                {/* Amount + resulting balance */}
+                                <div className="text-right shrink-0">
+                                  <p className={`text-sm font-bold font-mono ${isRecarga ? "text-green-600" : "text-red-500"}`}>
+                                    {isRecarga ? "+" : ""}{formatCurrency(Math.abs(amount))}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground font-mono">
+                                    Saldo: {formatCurrency(balance)}
+                                  </p>
                                 </div>
                               </div>
-                              <span className={`font-mono text-xs font-bold ${dayData.totalCharged > 0 ? "text-red-500" : "text-muted-foreground"}`}>
-                                {dayData.totalCharged > 0 ? `-${formatCurrency(dayData.totalCharged)}` : "S/ 0.00"}
-                              </span>
-                            </div>
-                          ))}
-                      </div>
-                    )}
-                  </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tab: Consumos por día */}
+                  {historyTab === "consumos" && historyStats && (
+                    <div className="space-y-2">
+                      {Object.keys(historyStats.history).length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-sm text-muted-foreground">No hay consumos registrados</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {Object.entries(historyStats.history)
+                            .sort(([a], [b]) => b.localeCompare(a))
+                            .map(([date, dayData]) => (
+                              <div
+                                key={date}
+                                className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border hover:bg-muted/50 transition-colors"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-9 h-9 rounded-lg bg-card border border-border flex flex-col items-center justify-center">
+                                    <span className="text-[10px] font-bold text-primary leading-none">
+                                      {new Date(date + "T12:00:00").toLocaleDateString("es-PE", { day: "2-digit" })}
+                                    </span>
+                                    <span className="text-[9px] text-muted-foreground leading-none mt-0.5">
+                                      {new Date(date + "T12:00:00").toLocaleDateString("es-PE", { month: "short" })}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    {dayData.meals.includes("DESAYUNO") && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 border border-amber-200/50">
+                                        <Coffee size={10} /> Des
+                                      </span>
+                                    )}
+                                    {dayData.meals.includes("ALMUERZO") && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-500/10 text-green-600 border border-green-200/50">
+                                        <UtensilsCrossed size={10} /> Alm
+                                      </span>
+                                    )}
+                                    {dayData.meals.includes("CENA") && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 text-indigo-600 border border-indigo-200/50">
+                                        <Moon size={10} /> Cen
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <span className={`font-mono text-xs font-bold ${dayData.totalCharged > 0 ? "text-red-500" : "text-muted-foreground"}`}>
+                                  {dayData.totalCharged > 0 ? `-${formatCurrency(dayData.totalCharged)}` : "S/ 0.00"}
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-sm text-muted-foreground">No se pudo cargar el historial</p>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* IMPORT RESULT DIALOG */}
+      <Dialog open={importResultOpen} onOpenChange={setImportResultOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <FileSpreadsheet size={18} className="text-[#06b6d4]" />
+              Resultado de importación
+            </DialogTitle>
+          </DialogHeader>
+
+          {importResult && (
+            <div className="flex-1 overflow-y-auto space-y-4 pt-1">
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle2 size={16} className="text-green-600" />
+                    <span className="text-xs font-medium text-green-700">Creados</span>
+                  </div>
+                  <p className="text-2xl font-bold text-green-700">{importResult.created}</p>
+                </div>
+                <div className={`border rounded-xl p-4 ${importResult.errors.length > 0 ? "bg-red-50 border-red-200" : "bg-muted/50 border-border"}`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertCircle size={16} className={importResult.errors.length > 0 ? "text-red-600" : "text-muted-foreground"} />
+                    <span className={`text-xs font-medium ${importResult.errors.length > 0 ? "text-red-700" : "text-muted-foreground"}`}>Errores</span>
+                  </div>
+                  <p className={`text-2xl font-bold ${importResult.errors.length > 0 ? "text-red-700" : "text-muted-foreground"}`}>
+                    {importResult.errors.length}
+                  </p>
+                </div>
+              </div>
+
+              {/* Error details */}
+              {importResult.errors.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Detalle de errores
+                  </span>
+                  <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
+                    {importResult.errors.map((err, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-2 p-2.5 rounded-lg bg-red-50 border border-red-200"
+                      >
+                        <AlertCircle size={14} className="text-red-500 mt-0.5 flex-shrink-0" />
+                        <div className="text-xs">
+                          <span className="font-semibold text-red-700">
+                            Fila {err.row}{err.dni ? ` (DNI: ${err.dni})` : ""}:
+                          </span>{" "}
+                          <span className="text-red-600">{err.error}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
+
+              <Button
+                onClick={() => setImportResultOpen(false)}
+                className="w-full bg-[#06b6d4] hover:bg-primary/90 text-white"
+              >
+                Cerrar
+              </Button>
             </div>
           )}
         </DialogContent>
