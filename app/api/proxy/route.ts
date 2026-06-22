@@ -50,14 +50,36 @@ async function proxyRequest(request: NextRequest) {
       return new NextResponse(null, { status: 204 })
     }
 
-    const data = await backendRes.text()
+    const contentType = backendRes.headers.get('Content-Type') || 'application/json'
 
-    const response = new NextResponse(data, {
+    // Binary content types (Excel, PDF, images, etc.) must be forwarded as
+    // raw bytes — reading them as text() corrupts the data (symbols/errors in Excel).
+    const isBinary =
+      contentType.includes('application/vnd.openxmlformats') ||
+      contentType.includes('application/vnd.ms-excel') ||
+      contentType.includes('application/octet-stream') ||
+      contentType.includes('application/pdf') ||
+      contentType.includes('image/')
+
+    let body: string | ArrayBuffer
+    if (isBinary) {
+      body = await backendRes.arrayBuffer()
+    } else {
+      body = await backendRes.text()
+    }
+
+    const response = new NextResponse(body, {
       status: backendRes.status,
       headers: {
-        'Content-Type': backendRes.headers.get('Content-Type') || 'application/json',
+        'Content-Type': contentType,
       },
     })
+
+    // Forward Content-Disposition so the browser uses the correct filename
+    const contentDisposition = backendRes.headers.get('Content-Disposition')
+    if (contentDisposition) {
+      response.headers.set('Content-Disposition', contentDisposition)
+    }
 
     // Forward any Set-Cookie headers from backend to browser
     const setCookies = backendRes.headers.getSetCookie()
