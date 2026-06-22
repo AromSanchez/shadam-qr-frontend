@@ -30,33 +30,6 @@ import {
   Cell,
 } from "recharts";
 
-// 📊 DATA
-
-const salesData = [
-  { day: "Lun", ventas: 1200 },
-  { day: "Mar", ventas: 980 },
-  { day: "Mié", ventas: 1450 },
-  { day: "Jue", ventas: 1100 },
-  { day: "Vie", ventas: 1680 },
-  { day: "Sáb", ventas: 2100 },
-  { day: "Dom", ventas: 1900 },
-];
-
-const topDishes = [
-  { name: "Lomo Saltado", count: 45, pct: 100 },
-  { name: "Ceviche Mixto", count: 38, pct: 84 },
-  { name: "Ají de Gallina", count: 32, pct: 71 },
-  { name: "Arroz con Pollo", count: 28, pct: 62 },
-  { name: "Seco de Res", count: 22, pct: 49 },
-];
-
-const paymentData = [
-  { name: "Efectivo", value: 40, color: "#06b6d4" },
-  { name: "Yape", value: 30, color: "#7c3aed" },
-  { name: "Plin", value: 20, color: "#22c55e" },
-  { name: "Saldo", value: 10, color: "#facc15" },
-];
-
 // 🚀 COMPONENTE
 
 export default function DashboardPage() {
@@ -69,17 +42,26 @@ export default function DashboardPage() {
     totalDebt: 0
   });
 
+  const [weeklySales, setWeeklySales] = useState<any[]>([]);
+  const [topDishes, setTopDishes] = useState<any[]>([]);
+  const [paymentData, setPaymentData] = useState<any[]>([]);
+
   useEffect(() => {
     fetch("/api/dashboard/stats")
       .then(res => res.json())
-      .then(data => setStats({
-        todaySales: data?.todaySales || 0,
-        todayConsumptionsCount: data?.todayConsumptionsCount || 0,
-        totalPensionists: data?.totalPensionists || 0,
-        activePensionists: data?.activePensionists || 0,
-        debtPensionists: data?.debtPensionists || 0,
-        totalDebt: data?.totalDebt || 0
-      }))
+      .then(data => {
+        setStats({
+          todaySales: data?.todaySales || 0,
+          todayConsumptionsCount: data?.todayConsumptionsCount || 0,
+          totalPensionists: data?.totalPensionists || 0,
+          activePensionists: data?.activePensionists || 0,
+          debtPensionists: data?.debtPensionists || 0,
+          totalDebt: data?.totalDebt || 0
+        });
+        setWeeklySales(data?.weeklySales || []);
+        setTopDishes(data?.topDishes || []);
+        setPaymentData(data?.paymentData || []);
+      })
       .catch(err => console.error(err));
   }, []);
 
@@ -137,7 +119,7 @@ export default function DashboardPage() {
 
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={salesData}>
+              <BarChart data={weeklySales}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="day" />
                 <YAxis />

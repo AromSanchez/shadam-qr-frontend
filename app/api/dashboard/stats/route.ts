@@ -1,37 +1,27 @@
-import { NextResponse } from "next/server";
-import { db } from "@/lib/mock-db";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
+
+export async function GET(request: NextRequest) {
   try {
-    const today = new URLSearchParams().get("date") || new Date().toISOString().split("T")[0];
-    
-    // Today's Sales
-    const todayOrders = db.orders.filter(o => 
-      o.createdAt.startsWith(today) && o.status !== "cancelado"
-    );
-    const todaySales = todayOrders.reduce((sum, o) => sum + o.total, 0);
+    const cookieHeader = request.headers.get('cookie') || '';
 
-    // Today's Consumptions
-    const todayConsumptionsCount = db.consumptions.filter(c => 
-      c.createdAt.startsWith(today) && c.status === "confirmado"
-    ).length;
-
-    // Pensioners stats
-    const totalPensionists = db.pensionists.length;
-    const activePensionists = db.pensionists.filter(p => p.status === "active").length;
-    const debtPensionists = db.pensionists.filter(p => (p.balance || 0) < 0).length;
-    const totalDebt = db.pensionists.reduce((sum, p) => sum + ((p.balance || 0) < 0 ? Math.abs(p.balance || 0) : 0), 0);
-
-    return NextResponse.json({
-      todaySales,
-      todayConsumptionsCount,
-      totalPensionists,
-      activePensionists,
-      debtPensionists,
-      totalDebt,
-      orderCount: todayOrders.length
+    const backendRes = await fetch(`${BACKEND_URL}/reports/dashboard-stats`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookieHeader,
+      },
     });
+
+    if (!backendRes.ok) {
+      return NextResponse.json({ error: "Failed to fetch stats from backend" }, { status: backendRes.status });
+    }
+
+    const data = await backendRes.json();
+    return NextResponse.json(data);
   } catch (error) {
+    console.error("[Stats Proxy Error]:", error);
     return NextResponse.json({ error: "Error fetching stats" }, { status: 500 });
   }
 }

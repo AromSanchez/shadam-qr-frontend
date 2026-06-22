@@ -65,12 +65,12 @@ function formatCurrency(value: number) {
 }
 
 function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("es-PE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  if (!dateStr) return "-";
+  // Parse safely: if it's an ISO string, slice the date part to avoid timezone shifts
+  const datePart = dateStr.split("T")[0]; // "2026-06-22"
+  const [year, month, day] = datePart.split("-").map(Number);
+  if (!year || !month || !day) return dateStr;
+  return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
 }
 
 function getToday() {
@@ -176,16 +176,34 @@ function VentasTab() {
         { credentials: "include" }
       );
       const json = await res.json();
+      const rawData: any[] = Array.isArray(json) ? json : json.data ?? [];
+      const mappedData: SaleRecord[] = rawData.map((sale: any) => ({
+        id: sale.id,
+        date: sale.soldAt ?? sale.date ?? "",
+        client: sale.pensioner?.name || sale.customerLabel || "Regular",
+        type: sale.type ?? "-",
+        items: (sale.items || []).map((item: any) => ({
+          name: item.productName ?? item.name ?? "?",
+          quantity: item.quantity ?? 1,
+          price: Number(item.unitPrice ?? item.price ?? 0),
+        })),
+        total: Number(sale.total ?? 0),
+        payment_method:
+          (sale.payments || [])
+            .map((p: any) => {
+              const method = p.method ?? "";
+              if (method === "EFECTIVO") return "Efectivo";
+              if (method === "YAPE") return "Yape";
+              if (method === "SALDO") return "Saldo";
+              return method;
+            })
+            .join(", ") || "-",
+      }));
 
-      if (!res.ok) {
-        toast.error(json?.message || "Error al cargar ventas");
-        setData([]);
-        return;
-      }
-
-      setData(Array.isArray(json) ? json : json.data || []);
+      setData(mappedData);
       setFetched(true);
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error("Error de conexión al cargar ventas");
       setData([]);
     } finally {
@@ -514,16 +532,20 @@ function ConsumosTab() {
         { credentials: "include" }
       );
       const json = await res.json();
+      const rawData: any[] = Array.isArray(json) ? json : json.data ?? [];
+      const mappedData: ConsumptionRecord[] = rawData.map((c: any) => ({
+        id: c.id,
+        date: c.date ?? c.createdAt ?? "",
+        pensioner_name: c.user?.name ?? "-",
+        pensioner_type: c.user?.pensioner_type ?? "-",
+        meal: c.mealType ?? c.meal ?? "-",
+        amount_charged: Number(c.amount ?? c.amount_charged ?? 0),
+      }));
 
-      if (!res.ok) {
-        toast.error(json?.message || "Error al cargar consumos");
-        setData([]);
-        return;
-      }
-
-      setData(Array.isArray(json) ? json : json.data || []);
+      setData(mappedData);
       setFetched(true);
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error("Error de conexión al cargar consumos");
       setData([]);
     } finally {
