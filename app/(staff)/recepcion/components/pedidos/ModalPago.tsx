@@ -59,7 +59,7 @@ export default function ModalPago({ pedido, open, onClose, onPagado }: ModalPago
       {/* Panel */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md rounded-t-[24px] sm:rounded-[24px] animate-slide-up"
+        className="relative w-full max-w-md rounded-t-[24px] sm:rounded-[24px] animate-slide-up mb-20 sm:mb-0"
         style={{
           backgroundColor: 'var(--pos-card)',
           boxShadow: 'var(--pos-shadow-xl)',

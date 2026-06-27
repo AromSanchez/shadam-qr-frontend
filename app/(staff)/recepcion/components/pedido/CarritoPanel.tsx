@@ -46,7 +46,7 @@ export default function CarritoPanel({
 
   return (
     <div
-      className="sticky bottom-0 sm:relative z-10 pos-glass animate-slide-up"
+      className="sticky bottom-0 sm:relative z-20 pos-glass animate-slide-up"
       style={{
         borderTop: '1px solid var(--pos-border)',
         boxShadow: '0 -8px 32px rgba(0,0,0,0.28)',
@@ -261,7 +261,7 @@ export default function CarritoPanel({
         )}
 
         {/* ── Action buttons ── */}
-        <div className="px-4 pb-5 pt-1 flex gap-3">
+        <div className="px-4 pt-1 flex gap-3 pb-5">
           <button
             onClick={onCancelar}
             className="pos-btn pos-btn-ghost h-[52px] px-5 rounded-2xl text-sm font-semibold font-heading transition-all duration-150 active:scale-[0.97]"

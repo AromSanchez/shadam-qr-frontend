@@ -64,7 +64,7 @@ export default function GrillaProductos({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       {/* Search + Favorites bar */}
       <div className="flex gap-2">
         <div className="relative flex-1">

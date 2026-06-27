@@ -149,7 +149,7 @@ export default function PantallaPedido({ mesaId, tipoCliente, pensionista, onVol
   const confirmLabel = onItemsReady ? '📋 Agregar pedido' : undefined
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--pos-bg)' }}>
+    <div className="flex flex-col h-full overflow-hidden" style={{ backgroundColor: 'var(--pos-bg)' }}>
       <HeaderPedido
         mesaNumero={mesaNumero}
         modo={modoActual}
@@ -161,7 +161,7 @@ export default function PantallaPedido({ mesaId, tipoCliente, pensionista, onVol
       />
 
       {/* Products grid */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 pb-nav-safe sm:pb-4">
         <GrillaProductos
           productos={productos}
           modo={modoActual}

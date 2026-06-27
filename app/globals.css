@@ -801,3 +801,13 @@
     scrollbar-width: none;
   }
 }
+
+/* -- Mobile responsive fixes: CarritoPanel + NavTabs overlap -- */
+@layer utilities {
+  .pb-safe {
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+  .pb-nav-safe {
+    padding-bottom: 5.5rem;
+  }
+}

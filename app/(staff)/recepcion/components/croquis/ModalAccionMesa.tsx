@@ -53,7 +53,7 @@ export default function ModalAccionMesa({
       {/* Sheet / Card */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="pos-modal relative w-[calc(100%-1.5rem)] sm:w-full sm:max-w-sm animate-slide-up mx-auto mb-4 sm:mb-0"
+        className="pos-modal relative w-[calc(100%-1.5rem)] sm:w-full sm:max-w-sm animate-slide-up mx-auto mb-24 sm:mb-0"
         style={{
           borderRadius: 'var(--pos-radius-2xl)',
         }}

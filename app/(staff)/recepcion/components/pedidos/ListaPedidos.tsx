@@ -153,7 +153,7 @@ export default function ListaPedidos() {
 
   // ── Main render ───────────────────────────────────────────────
   return (
-    <div className="animate-fade-in p-4 space-y-2.5 pb-24 sm:pb-4">
+    <div className="animate-fade-in p-4 space-y-2.5 pb-32 sm:pb-4">
       {/* Section header */}
       <div className="flex items-center justify-between mb-3 px-1">
         <h2 className="font-heading text-base font-bold" style={{ color: 'var(--pos-text)' }}>

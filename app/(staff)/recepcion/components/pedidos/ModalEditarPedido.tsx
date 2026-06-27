@@ -153,7 +153,7 @@ export default function ModalEditarPedido({ pedido, open, onClose, onGuardar }: 
       <div className="pos-modal-overlay absolute inset-0" />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg max-h-[85vh] rounded-t-[24px] sm:rounded-[24px] flex flex-col animate-slide-up"
+        className="relative w-full max-w-lg max-h-[85vh] rounded-t-[24px] sm:rounded-[24px] flex flex-col animate-slide-up mb-20 sm:mb-0"
         style={{
           backgroundColor: 'var(--pos-card)',
           boxShadow: 'var(--pos-shadow-xl)',
