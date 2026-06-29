@@ -111,25 +111,30 @@ export default function PantallaPedido({ mesaId, tipoCliente, pensionista, onVol
 
     setEnviando(true)
     const mesasUnidas = mesa?.unidaCon || []
-    const pedidoId = await crearPedidoAsync({
-      mesaId,
-      mesasUnidas,
-      items,
-      extras,
-      total,
-      modo: modoActual,
-      tipo: tipoCliente,
-      pensionistas: pensionista ? [{ ...pensionista, pedidoConfirmado: true, itemsPedido: items, extras }] : undefined,
-      estado: 'activo',
-    })
-    setEnviando(false)
-
-    if (pedidoId) {
-      mostrarToast({ mensaje: 'Pedido registrado correctamente', tipo: 'success' })
-    } else {
-      mostrarToast({ mensaje: 'Pedido guardado localmente (sin conexion al servidor)', tipo: 'warning' })
+    try {
+      const pedidoId = await crearPedidoAsync({
+        mesaId,
+        mesasUnidas,
+        items,
+        extras,
+        total,
+        modo: modoActual,
+        tipo: tipoCliente,
+        pensionistas: pensionista ? [{ ...pensionista, pedidoConfirmado: true, itemsPedido: items, extras }] : undefined,
+        estado: 'activo',
+      })
+      setEnviando(false)
+      if (pedidoId) {
+        mostrarToast({ mensaje: 'Pedido registrado correctamente', tipo: 'success' })
+      } else {
+        mostrarToast({ mensaje: 'Pedido guardado localmente (sin conexion al servidor)', tipo: 'warning' })
+      }
+      setExito(true)
+    } catch (err: unknown) {
+      setEnviando(false)
+      const mensaje = err instanceof Error ? err.message : 'Error al registrar el pedido'
+      mostrarToast({ mensaje, tipo: 'error', duracion: 5000 })
     }
-    setExito(true)
   }, [items, extras, total, mesaId, mesa, modoActual, tipoCliente, pensionista, crearPedidoAsync, mostrarToast, pedidoExistente, esPensionista, onItemsReady])
 
   if (exito) {

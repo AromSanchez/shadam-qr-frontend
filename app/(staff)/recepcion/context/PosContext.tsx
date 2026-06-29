@@ -267,12 +267,13 @@ export function PosProvider({ children }: { children: React.ReactNode }) {
   // ─── Fetch products from active menu ───
   const fetchProductos = useCallback(async () => {
     try {
-      const res = await fetch('/api/proxy?path=' + encodeURIComponent('/menus/actual'))
+      const res = await fetch('https://shadam-backend.onrender.com/menus')
       if (!res.ok) {
-        console.warn('[POS] No active menu found, using local products')
+        console.warn('[POS] No se pudo cargar el menú del backend')
         return
       }
-      const menu = await res.json()
+      const menus = await res.json()
+      const menu = menus.find((m: { activo: boolean }) => m.activo)
       if (menu && menu.productos && menu.productos.length > 0) {
         const productos: Producto[] = menu.productos
           .filter((mp: any) => mp.visible)
@@ -408,7 +409,7 @@ export function PosProvider({ children }: { children: React.ReactNode }) {
       tableNumber: buildTableNumber(data.mesaId, data.mesasUnidas),
       customerType: mapCustomerType(data.tipo),
       items: data.items.map((item) => ({
-        productoId: parseInt(item.producto.id) || 0,
+        productoId: parseInt(item.producto.id, 10),
         quantity: item.cantidad,
         isTakeaway: item.paraLlevar,
       })),
@@ -433,7 +434,7 @@ export function PosProvider({ children }: { children: React.ReactNode }) {
         tableNumber: buildTableNumber(data.mesaId, data.mesasUnidas),
         customerType: mapCustomerType(data.tipo),
         items: data.items.map((item) => ({
-          productoId: parseInt(item.producto.id) || 0,
+          productoId: parseInt(item.producto.id, 10),
           quantity: item.cantidad,
           isTakeaway: item.paraLlevar,
         })),
@@ -472,7 +473,7 @@ export function PosProvider({ children }: { children: React.ReactNode }) {
       const updateData: any = {}
       if (cambios.items) {
         updateData.items = cambios.items.map((item) => ({
-          productoId: parseInt(item.producto.id) || 0,
+          productoId: parseInt(item.producto.id, 10),
           quantity: item.cantidad,
           isTakeaway: item.paraLlevar,
         }))
